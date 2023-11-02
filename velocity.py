@@ -1,6 +1,9 @@
 import numpy as np
 import random
 
+num_dim = 4
+num_part = 5
+
 #Global best
 g_best = None
 
@@ -9,6 +12,23 @@ p_best = None
 
 #Current position
 x_pos = None
+
+#Upper and lower bounds (U-L array) 1 for each dim
+upper_bound = np.array([3, 7, 4, 8])
+lower_bound = np.array([1, 2, 3, 4])
+
+def initializationthing () :
+    #in a real problem, we'll have to define each scaling factor before we calculate ?
+    scalingfactor = upper_bound - lower_bound
+
+    v_part = np.random.rand(num_dim, num_part)
+
+    v_part[ : ] *= scalingfactor[ : , np.newaxis]
+    v_part[ : ] += lower_bound[ : , np.newaxis]
+
+    return v_part
+
+print(initializationthing())
 
 #Learning parameters:
 #Weight part of inertia compoennet
@@ -29,8 +49,6 @@ def good_learning_parameters(w: float, c1: float, c2: float):
 if not good_learning_parameters(w, c1, c2):
     raise Exception("Bad parameters")
 
-num_dim = 4
-num_part = 5
 
 #Randomize velocity vector
 g_best = np.random.rand(num_dim, 1)
