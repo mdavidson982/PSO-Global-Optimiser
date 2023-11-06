@@ -4,60 +4,73 @@ import random
 num_dim = 4
 num_part = 5
 
-#Global best
-g_best = None
-
-#Personal best
-p_best = None
-
-#Current position
-x_pos = None
-
 #Upper and lower bounds (U-L array) 1 for each dim
 upper_bound = np.array([3, 7, 4, 8])
 lower_bound = np.array([1, 2, 3, 4])
 
-def initializationthing () :
+alpha = 0.3
+
+def x_initializer():
     #in a real problem, we'll have to define each scaling factor before we calculate ?
     scalingfactor = upper_bound - lower_bound
 
-    v_part = np.random.rand(num_dim, num_part)
+    pos_matrix = np.random.rand(num_dim, num_part)
 
-    v_part[ : ] *= scalingfactor[ : , np.newaxis]
-    v_part[ : ] += lower_bound[ : , np.newaxis]
+    pos_matrix[ : ] *= scalingfactor[ : , np.newaxis]
+    pos_matrix[ : ] += lower_bound[ : , np.newaxis]
 
-    return v_part
+    return pos_matrix
 
-print(initializationthing())
+def v_initializer(alpha: float):
+    if alpha < 0 or alpha >= 1:
+        raise Exception("Whomp whomp")
+    
+    vmax = upper_bound - lower_bound
 
-#Learning parameters:
-#Weight part of inertia compoennet
-w = 0.1 #velocity, Randomized from 0 - 1
+    scalingfactor = 2*vmax
 
-#Acceleration coefficients
-c1 = 0.0 #Random numbe from [0 - 2), fixed throughout the function,
-c2 = 0.0 #Random number from [0- 2), fixed throughout the function
+    vel_matrix = np.random.rand(num_dim, num_part)
 
-k = None #Step increment
+    vel_matrix[ : ] *= scalingfactor[ : , np.newaxis]
+    vel_matrix[ : ] += alpha*(-1*vmax)[ : , np.newaxis]
+
+    return vel_matrix, vmax
+
+def initializer():
+    pos_matrix = x_initializer()
+    vel_matrix, vmax = v_initializer(alpha = alpha)
+    pbest = x_initializer()
+    gbest = np.random.rand(num_dim, 1)
+
+initializer()
+
+
+    
+
 
 def good_learning_parameters(w: float, c1: float, c2: float):
     if w < 1 and w > 0.5*(c1+c2):
         return True
     return False
 
-
 if not good_learning_parameters(w, c1, c2):
     raise Exception("Bad parameters")
 
+#Learning parameters:
+#Weight part of inertia compoennet
+w = 0.7 #velocity, Randomized from 0 - 1
+
+#Acceleration coefficients
+c1 = 0.3 #Random numbe from [0 - 2), fixed throughout the function,
+c2 = 0.4 #Random number from [0- 2), fixed throughout the function
+
+k = None #Step increment
 
 #Randomize velocity vector
 g_best = np.random.rand(num_dim, 1)
-
-p_best = np.random.rand(num_dim, num_part)
-x_pos = np.random.rand(num_dim, num_part)
-v_part = np.random.rand(num_dim, num_part)
-#print(v_part)
-#print(v_part[:, 0])
+p_best = initializer()
+x_pos = initializer()
+v_part = initializer()
 
 def update_velocity(v_part, x_pos, g_best, p_best, w, c1, c2):
 #Randomness variables
