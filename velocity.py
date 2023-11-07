@@ -37,17 +37,14 @@ pos_matrix, vel_matrix, p_best, g_best, v_max = ini.initializer(num_part=num_par
 
 def update_velocity(v_part, x_pos, g_best, p_best, w, c1, c2):
 #Randomness variables
-    r1 = random.random()
-    r2 = random.random()
+    r1 = np.random.rand()
+    r2 = np.random.rand()
 
     print(f"r1 is: {r1}, r2 is {r2}")
 
     print("velocity was:")
     print(v_part)
-
-    for i in range(num_part):
-        # The three parts below are, Inertia, cognitive path, social/global part
-        v_part[:, i] = (w*v_part[:, i]) + r1*c1*(x_pos[:, i] - p_best[:-1, i]) + r2*c2*(x_pos[:, i] - g_best[:, 0])
+    v_part = v_part*w + r1*c1*(x_pos-p_best[:-1]) + r2*c2*(x_pos-g_best[:-1, np.newaxis])
 
     print("velocity is now:")
     print(v_part)

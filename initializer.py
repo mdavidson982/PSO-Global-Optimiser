@@ -25,7 +25,7 @@ def initializer(num_part: int, num_dim: int, alpha: np.float64, upper_bound: np.
     p_best = np.vstack((pos_matrix, distances_row))
 
     #TODO:  make g_best its own function
-    g_best = np.random.rand(num_dim, 1)
+    g_best = p_best[:, 0].copy()
 
     return pos_matrix, vel_matrix, p_best, g_best, v_max
 
