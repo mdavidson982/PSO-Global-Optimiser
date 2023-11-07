@@ -1,5 +1,17 @@
 import numpy as np
 
+def update_p_best(pos_matrix: np.ndarray, past_p_best: np.ndarray, function):
+    results = np.apply_along_axis(function, axis=0, arr=pos_matrix)
+    evaluated = np.vstack((pos_matrix, results))
+    mask = past_p_best[-1, :] < evaluated[-1, :]
+    return np.where(mask, past_p_best, evaluated)
+
+def update_g_best(p_best: np.ndarray):
+    # find minimum p_best
+    # if minimum p_best is less than g_best, update that
+    print(p_best[-1, :])
+    return p_best[:, np.argmin(p_best[-1, :])]
+
 
 def initializer(num_part: int, num_dim: int, alpha: np.float64, upper_bound: np.ndarray, lower_bound: np.ndarray):
     """ Initialization function for the PSO algorithm.

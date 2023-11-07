@@ -1,9 +1,5 @@
 import numpy as np
-import random
 import initializer as ini
-
-def update_p_best(pos_matrix: np.ndarray, p_best: np.ndarray, function):
-    pass
 
 def good_learning_parameters(w: float, c1: float, c2: float):
     return w < 1 and w > 0.5*(c1+c2)
