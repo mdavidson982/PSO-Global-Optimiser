@@ -1,19 +1,22 @@
 import numpy as np
 
-def update_p_best(pos_matrix: np.ndarray, past_p_best: np.ndarray, function):
+def _Default(array: np.ndarray) -> np.float64:
+    return 1
+
+def update_p_best(pos_matrix: np.ndarray, past_p_best: np.ndarray, function) -> np.ndarray:
     results = np.apply_along_axis(function, axis=0, arr=pos_matrix)
     evaluated = np.vstack((pos_matrix, results))
     mask = past_p_best[-1, :] < evaluated[-1, :]
     return np.where(mask, past_p_best, evaluated)
 
-def update_g_best(p_best: np.ndarray):
+def update_g_best(p_best: np.ndarray) -> np.ndarray:
     # find minimum p_best
     # if minimum p_best is less than g_best, update that
-    print(p_best[-1, :])
-    return p_best[:, np.argmin(p_best[-1, :])]
+    return p_best[:, np.argmin(p_best[-1, :])].copy()
 
-
-def initializer(num_part: int, num_dim: int, alpha: np.float64, upper_bound: np.ndarray, lower_bound: np.ndarray):
+def initializer(num_part: int, num_dim: int, alpha: np.float64, 
+                upper_bound: np.ndarray, lower_bound: np.ndarray, 
+                function = _Default) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     """ Initialization function for the PSO algorithm.
     num_part:  Number of particles
     num_dim: Number of dimensions
@@ -29,19 +32,20 @@ def initializer(num_part: int, num_dim: int, alpha: np.float64, upper_bound: np.
     vel_matrix, v_max = _v_initializer(num_dim=num_dim, num_part=num_part, upper_bound=upper_bound, lower_bound=lower_bound, alpha = alpha)
 
     # The distances row contians the distances for each particle's p_best.  It is used to keep track of
-    # Results so no recalculation is needed.
+    # Results so no recalculation is needed.  It is initialized at the max value, so that when the function
+    # Is evaluated for the first time it properly updates
     distances_row = np.ones((1, num_part))
     distances_row *= np.finfo(np.float64).max
 
     # Let the personal best be the current position.
     p_best = np.vstack((pos_matrix, distances_row))
+    p_best = update_p_best(pos_matrix=pos_matrix, past_p_best=p_best, function=function)
 
-    #TODO:  make g_best its own function
-    g_best = p_best[:, 0].copy()
+    g_best = update_g_best(p_best=p_best)
 
     return pos_matrix, vel_matrix, p_best, g_best, v_max
 
-def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_bound: np.ndarray):
+def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_bound: np.ndarray) -> np.ndarray:
     scalingfactor = upper_bound - lower_bound
 
     pos_matrix = np.random.rand(num_dim, num_part)
@@ -51,7 +55,7 @@ def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_b
 
     return pos_matrix
 
-def _v_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_bound: np.ndarray, alpha: float):
+def _v_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_bound: np.ndarray, alpha: np.float64) -> (np.ndarray, np.ndarray):
     if alpha < 0 or alpha >= 1:
         raise Exception("Whomp whomp")
     

@@ -1,5 +1,6 @@
 import numpy as np
 import initializer as ini
+import time
 
 def good_learning_parameters(w: float, c1: float, c2: float):
     return w < 1 and w > 0.5*(c1+c2)
@@ -11,27 +12,29 @@ num_part = 5
 upper_bound = np.array([3, 7, 4, 8])
 lower_bound = np.array([1, 2, 3, 4])
 
-alpha = 0.3
+alpha: np.float64 = 0.3
 
 #Learning parameters:
 #Weight part of inertia compoennet
-w = 0.7 #velocity, Randomized from 0 - 1
+w: np.float64 = 0.7 #velocity, Randomized from 0 - 1
 
 #Acceleration coefficients
-c1 = 0.3 #Random numbe from [0 - 2), fixed throughout the function,
-c2 = 0.4 #Random number from [0- 2), fixed throughout the function
+c1: np.float64 = 0.3 #Random numbe from [0 - 2), fixed throughout the function,
+c2: np.float64 = 0.4 #Random number from [0- 2), fixed throughout the function
 
 if not good_learning_parameters(w, c1, c2):
     raise Exception("Bad parameters")
 
 k = None #Step increment
 
-#Randomize velocity vector
-
+#initialization variables
+start = time.time_ns()
 pos_matrix, vel_matrix, p_best, g_best, v_max = ini.initializer(num_part=num_part, num_dim=num_dim, alpha=alpha, upper_bound=upper_bound,
                                                                 lower_bound=lower_bound)
+print(f"initialization took {time.time_ns()-start} nanoseconds")
 
-def update_velocity(v_part, x_pos, g_best, p_best, w, c1, c2):
+def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray, 
+                    p_best: np.ndarray, w: np.float64, c1: np.float64, c2: np.float64):
 #Randomness variables
     r1 = np.random.rand()
     r2 = np.random.rand()
