@@ -30,3 +30,31 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
 
 def update_position(x_pos: np.ndarray, v_part: np.ndarray):
     return x_pos + v_part
+
+
+def verify_bounds(upper_bound: np.ndarray, lower_bound: np.ndarray, matrix: np.ndarray):
+
+    #The following function verifies that the matrix does not exceed the upper or lower bound dimmensions. 
+    #Here's an example of constraining both Max and Min:
+    """
+        Original array:
+        [[2 5 8]
+        [1 4 6]
+        [3 7 9]]
+        Upper Bounds 1D Array:
+        [3 6 7]
+        Lower Bound 1D Array:
+        [2 3 5]
+        Result after applying minimum constraint:
+        [[2 3 3]
+        [3 4 6]
+        [5 7 7]]"""
+    
+    #Pay attention to the the index of both the lower and upper bound 1D arrays. they coincide with the with the respective row in the 2D array
+    #(Notice how row 3 in the original array changed from 3, 7, 9 to 5, 7, 7 
+    #This is because 5 is the minimum value seen in the third index of the lower bound array and 7 is the max value in the upper bound array. 
+    #Because of this, the 3 and 9 in the last row of the original array change to min and max respectively)
+    result = np.maximum(matrix, lower_bound[: np.newaxis])
+    result = np.minimum(matrix, upper_bound[:, np.newaxis])
+
+    return result
