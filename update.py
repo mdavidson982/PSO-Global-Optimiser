@@ -26,3 +26,7 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
 
     print("velocity is now:")
     print(v_part)
+
+
+def update_position(x_pos: np.ndarray, v_part: np.ndarray):
+    return x_pos + v_part
