@@ -1,3 +1,5 @@
+#Outdated File. Not Used. Pretty Cringe.
+
 #Comsc490 Project PSO Position
 import random
 import numpy as np
