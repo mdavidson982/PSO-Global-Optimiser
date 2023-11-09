@@ -32,4 +32,4 @@ up.update_velocity(v_part=vel_matrix, x_pos=pos_matrix, g_best=g_best, p_best=p_
 #p_best, and g_best functions until we get a satisfactory answer, and loop under the number of times defined in
 #max iteration var
 
-for p.MAX_ITERATIONS:
+for _ in range(p.MAX_ITERATIONS):
