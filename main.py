@@ -15,6 +15,7 @@ if not good_learning_parameters(p.W, p.C1, p.C2):
 
 #initialization variables
 #calls the initialization function in the initializer.py. 
+#Uses the parameter values created in parameters.py
 #Returns: pos_matrix, an ndarray that keep the position of each particle (Initialized with random values for each dimmension)
 #         vel_matrix, an ndarray that keeps the velocity for each particle (Initialized with random values for each dimmension)
 #         p_best, an ndarray that keeps the personal minimum for each particle in each dimmension
