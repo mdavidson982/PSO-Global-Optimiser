@@ -5,6 +5,9 @@ NUM_DIM = 4
 #Number of particles that we want to use
 NUM_PART = 5
 
+#Max number of iterations. This determines the number of times the MPSO algorithm updates
+MAX_ITERATIONS = 1000
+
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
 UPPER_BOUND = np.array([3, 7, 4, 8])
 LOWER_BOUND = np.array([1, 2, 3, 4])

@@ -3,6 +3,8 @@ import initializer as ini
 import parameters as p
 import update as up
 
+
+
 def good_learning_parameters(w: float, c1: float, c2: float):
     return w < 1 and w > 0.5*(c1+c2)
 
