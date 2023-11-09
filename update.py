@@ -14,7 +14,7 @@ def update_g_best(p_best: np.ndarray) -> np.ndarray:
 
 def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray, 
                     p_best: np.ndarray, w: np.float64, c1: np.float64, c2: np.float64):
-#Randomness variables
+    #Randomness variables. Returns values between 0 and 1.
     r1 = np.random.rand()
     r2 = np.random.rand()
 
@@ -22,6 +22,11 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
 
     print("velocity was:")
     print(v_part)
+
+
+    #Update Velocity Formula
+    #v_part * w: Inertia term. It allows particles to retain some of their previous velocity
+    #r1 
     v_part = v_part*w + r1*c1*(x_pos-p_best[:-1]) + r2*c2*(x_pos-g_best[:-1, np.newaxis])
 
     print("velocity is now:")
@@ -29,6 +34,7 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
 
 
 def update_position(x_pos: np.ndarray, v_part: np.ndarray):
+    #Updates the position of a particle by adding the velocity to the position for each dimmension
     return x_pos + v_part
 
 
