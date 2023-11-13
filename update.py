@@ -37,7 +37,7 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
     """Updates the velocity for each particle in each dimmension
     v_part: ndarray that represents the current velocities for each dimmention of a particle
     x_pos: ndarray that reperesents the current position of the particle
-    g_best: ndarray for the the global best position found by the particle swarm (seem more at update_g_best)
+    g_best: ndarray for the the global best position found by the particle swarm (see more at update_g_best)
     p_best: ndarray for the personal best position found by each particle (Look at update p_best)
     w: ndarray representing inertia weight for the PSO algorithm
     c1: ndarray representing cognitive (personal) component [Stored in parameters.py]
