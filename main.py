@@ -34,6 +34,8 @@ pos_matrix, vel_matrix, p_best, g_best, v_max = ini.initializer(num_part=p.NUM_P
 for _ in range (p.MAX_ITERATIONS):
     up.update_velocity(v_part=vel_matrix, x_pos=pos_matrix, g_best=g_best, p_best=p_best, w=p.W, c1=p.C1, c2=p.C2)
     up.update_position(x_pos=pos_matrix, v_part=vel_matrix)
+    #added verify bound to the MPSO loop. Assumed position matrix was the correct input. Putting this comment here to make sure that's right later when we review.
+    up.verify_bound(upper_bound = p.UPPER_BOUND, lower_bound = p.LOWER_BOUN, matrix = pos_matrix)
     up.update_p_best(pos_matrix= np.ndarray, past_p_best = np.ndarray)
     up.update_g_best(p_best=p_best)
 
