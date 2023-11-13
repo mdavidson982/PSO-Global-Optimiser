@@ -25,6 +25,7 @@ def initializer(num_part: int, num_dim: int, alpha: np.float64,
     alpha:  parameter for velocity max
     upper_bound:  Upper bounds of the domain of the problem
     lower_bound:  Lower bounds of the domain of the problem
+    function: Optimization Problem (uses _Default function for no input)
 
     ------------Returns (Output)--------------
 
