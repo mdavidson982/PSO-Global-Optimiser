@@ -23,7 +23,7 @@ if not good_learning_parameters(p.W, p.C1, p.C2):
 #         g_best, an ndarray that keeps the global minimum between all particles in each dimmension
 #         v_max, float based on the size of the area, this is the max velocity each particle can move 
 pos_matrix, vel_matrix, p_best, g_best, v_max = ini.initializer(num_part=p.NUM_PART, num_dim=p.NUM_DIM, alpha=p.ALPHA, upper_bound=p.UPPER_BOUND,
-                                                                lower_bound=p.LOWER_BOUND)
+                                                                lower_bound=p.LOWER_BOUND, function = tf.Spherefunct)
 
 
 
@@ -39,7 +39,7 @@ for i in range (p.MAX_ITERATIONS):
     pos_matrix = up.update_position(x_pos=pos_matrix, v_part=vel_matrix)
     #added verify bound to the MPSO loop. Assumed position matrix was the correct input. Putting this comment here to make sure that's right later when we review.
     pos_matrix = up.verify_bounds(upper_bound = p.UPPER_BOUND, lower_bound = p.LOWER_BOUND, matrix = pos_matrix)
-    p_best = up.update_p_best(pos_matrix= np.ndarray, past_p_best = np.ndarray, function = tf.Spherefunct)
+    p_best = up.update_p_best(pos_matrix= pos_matrix, past_p_best = p_best, function = tf.Spherefunct)
     g_best = up.update_g_best(p_best=p_best)
 
     print("iteration: ", i )
