@@ -1,12 +1,13 @@
 import numpy as np
+import parameters as p
 #Private Function. Really Shouldn't be used.
 #This is used in place of the equation we will be optimizing.
 #This will be changed out for some other hardcoded equation down the line. Right now, this is just a place holder
-def _Default(array: np.ndarray) -> np.float64:
+def _Default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:
     return 1 
 
 
-def update_p_best(pos_matrix: np.ndarray, past_p_best: np.ndarray, function = _Default) -> np.ndarray:
+def update_p_best(pos_matrix: np.ndarray[p.DTYPE], past_p_best: np.ndarray[p.DTYPE], function = _Default) -> np.ndarray[p.DTYPE]:
     """Updates the personal best for each particle in each iteration (if the updated value is smaller than the previous value).
     This is completed by preforming the optomization function on each particle
 
@@ -19,7 +20,7 @@ def update_p_best(pos_matrix: np.ndarray, past_p_best: np.ndarray, function = _D
     mask = past_p_best[-1, :] < evaluated[-1, :] # Boolean mask for every row.  Basically, only update columns if the result is smaller
     return np.where(mask, past_p_best, evaluated) # Apply the mask
 
-def update_g_best(p_best: np.ndarray) -> np.ndarray:
+def update_g_best(p_best: np.ndarray[p.DTYPE]) -> np.ndarray[p.DTYPE]:
     """Updates the global minimum value found in the p_best for each particle.
     g_best is determined by selecting the particle with the best minimum in each dimmension"""
     # Since g_best should always be in p_best, return the min of p_best.
@@ -32,8 +33,8 @@ def update_g_best(p_best: np.ndarray) -> np.ndarray:
     return p_best[:, np.argmin(p_best[-1, :])].copy()
 
 
-def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray, 
-                    p_best: np.ndarray, w: np.float64, c1: np.float64, c2: np.float64):
+def update_velocity(v_part: np.ndarray[p.DTYPE], x_pos: np.ndarray[p.DTYPE], g_best: np.ndarray[p.DTYPE], 
+                    p_best: np.ndarray[p.DTYPE], w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE):
     """Updates the velocity for each particle in each dimmension
     v_part: ndarray that represents the current velocities for each dimmention of a particle
     x_pos: ndarray that reperesents the current position of the particle
@@ -59,13 +60,13 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
     return v_part
 
 
-def update_position(x_pos: np.ndarray, v_part: np.ndarray):
+def update_position(x_pos: np.ndarray[p.DTYPE], v_part: np.ndarray[p.DTYPE]):
     """Updates the position of a particle by adding the velocity to the position for each dimmension
     returns an updated position ndarray"""
     return x_pos + v_part
 
 
-def verify_bounds(upper_bound: np.ndarray, lower_bound: np.ndarray, matrix: np.ndarray):
+def verify_bounds(upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], matrix: np.ndarray[p.DTYPE]):
 
     """The following function verifies that the matrix does not exceed the upper or lower bound dimmensions. 
     Here's an example of constraining both Max and Min:
@@ -87,7 +88,7 @@ def verify_bounds(upper_bound: np.ndarray, lower_bound: np.ndarray, matrix: np.n
     (Notice how row 3 in the original array changed from 3, 7, 9 to 5, 7, 7 
     This is because 5 is the minimum value seen in the third index of the lower bound array and 7 is the max value in the upper bound array. 
     Because of this, the 3 and 9 in the last row of the original array change to min and max respectively)"""
-    result = np.maximum(matrix, lower_bound[:, np.newaxis])
-    result = np.minimum(matrix, upper_bound[:, np.newaxis])
+    matrix = np.maximum(matrix, lower_bound[:, np.newaxis])
+    matrix = np.minimum(matrix, upper_bound[:, np.newaxis])
 
-    return result
+    return matrix

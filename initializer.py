@@ -1,8 +1,9 @@
 import numpy as np
 import update as up
+import parameters as p
 
 
-def _Default(array: np.ndarray) -> np.float64:
+def _Default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:
     """Private Function. Really Shouldn't be used.
     _Default is used as the default optimization function in initializer, this is really for debugging.
     Ideally, we will have other functions for more complex optimization problems that will take place of default"""
@@ -12,8 +13,8 @@ def _Default(array: np.ndarray) -> np.float64:
 
 
 
-def initializer(num_part: int, num_dim: int, alpha: np.float64, 
-                upper_bound: np.ndarray, lower_bound: np.ndarray, 
+def initializer(num_part: int, num_dim: int, alpha: p.DTYPE, 
+                upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], 
                 function = _Default) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     """ Initialization function for the PSO algorithm. 
 
@@ -45,18 +46,18 @@ def initializer(num_part: int, num_dim: int, alpha: np.float64,
     # The distances row contians the distances for each particle's p_best.  It is used to keep track of
     # Results so no recalculation is needed.  It is initialized at the max value, so that when the function
     # Is evaluated for the first time it properly updates
-    distances_row = np.ones((1, num_part))
-    distances_row *= np.finfo(np.float64).max
+    distances_row = np.ones((1, num_part), dtype=p.DTYPE)
+    distances_row *= np.finfo(p.DTYPE).max
 
     # Let the personal best be the current position.
-    p_best = np.vstack((pos_matrix, distances_row))
+    p_best = np.vstack((pos_matrix, distances_row), dtype=p.DTYPE)
     p_best = up.update_p_best(pos_matrix=pos_matrix, past_p_best=p_best, function=function)
 
     g_best = up.update_g_best(p_best=p_best)
 
     return pos_matrix, vel_matrix, p_best, g_best, v_max
 
-def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_bound: np.ndarray) -> np.ndarray:
+def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE]) -> np.ndarray:
     """Private function. Used in initializer. Randomly initializes the positions of each particle within the upper and lower bound limits of each dimmension"""
     scalingfactor = upper_bound - lower_bound
 
@@ -67,7 +68,7 @@ def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_b
 
     return pos_matrix
 
-def _v_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray, lower_bound: np.ndarray, alpha: np.float64) -> (np.ndarray, np.ndarray):
+def _v_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], alpha: p.DTYPE) -> (np.ndarray, np.ndarray):
     """Private function. Used in initializer. Randomly initializes the velocities of each particle
     """
     if alpha < 0 or alpha >= 1:
