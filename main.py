@@ -42,7 +42,7 @@ for i in range (p.MAX_ITERATIONS):
     p_best = up.update_p_best(pos_matrix= pos_matrix, past_p_best = p_best, function = tf.Spherefunct)
     g_best = up.update_g_best(p_best=p_best)
 
-    print("iteration: ", i )
+    print("iteration: ", i+1 )
     print("This is the velocity matrix: ")
     print(vel_matrix)
     print("this is the position matrix: ")
@@ -52,7 +52,7 @@ for i in range (p.MAX_ITERATIONS):
     print("this is the g best: ")
     print(g_best)
 
-    input()
+    #input()
 
 #terminating conditions: will either terminate when
 #1. max iterations reached
