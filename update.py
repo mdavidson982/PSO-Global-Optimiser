@@ -50,20 +50,13 @@ def update_velocity(v_part: np.ndarray, x_pos: np.ndarray, g_best: np.ndarray,
     r1 = np.random.rand()
     r2 = np.random.rand()
 
-    print(f"r1 is: {r1}, r2 is {r2}")
-
-    print("velocity was:")
-    print(v_part)
-
 
     #Update Velocity Formula
     #v_part * w: Inertia term. It allows particles to retain some of their previous velocity
     #r1 * c1 * (x_pos - p_best[:-1]): Personal Cognitive Component. Pulls the particle towards the personal best (p_best) position
     #r2 * c2 * (x_pos - g_best[:-1, np.newaxis]): Global Cognitive Component. Pulls the partivle towards the global best position
     v_part = v_part*w + r1*c1*(x_pos-p_best[:-1]) + r2*c2*(x_pos-g_best[:-1, np.newaxis])
-
-    print("velocity is now:")
-    print(v_part)
+    return v_part
 
 
 def update_position(x_pos: np.ndarray, v_part: np.ndarray):
