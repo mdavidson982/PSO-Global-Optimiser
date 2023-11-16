@@ -94,7 +94,7 @@ def verify_bounds(upper_bound: np.ndarray, lower_bound: np.ndarray, matrix: np.n
     (Notice how row 3 in the original array changed from 3, 7, 9 to 5, 7, 7 
     This is because 5 is the minimum value seen in the third index of the lower bound array and 7 is the max value in the upper bound array. 
     Because of this, the 3 and 9 in the last row of the original array change to min and max respectively)"""
-    result = np.maximum(matrix, lower_bound[: np.newaxis])
+    result = np.maximum(matrix, lower_bound[:, np.newaxis])
     result = np.minimum(matrix, upper_bound[:, np.newaxis])
 
     return result
