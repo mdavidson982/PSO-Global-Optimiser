@@ -3,6 +3,7 @@ import initializer as ini
 import parameters as p
 import update as up
 import testfuncts as tf
+import time
 
 
 def good_learning_parameters(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
@@ -25,6 +26,7 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
                 upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], 
                 max_iterations: int, w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE, tolerance: p.DTYPE,
                 mv_iteration: int, function):
+    start = time.time()
     
     if not good_learning_parameters(w, c1, c2):
         raise Exception("Bad parameters")
@@ -81,6 +83,7 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
         #input() #
     print("The global best was ", g_best[:-1])
     print("The image was ", g_best[-1])
+    print(f"The function took {time.time()-start} seconds to run")
 
 mpso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
      max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
