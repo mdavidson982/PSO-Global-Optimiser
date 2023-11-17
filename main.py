@@ -50,6 +50,8 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
         #if np.linalg.norm(g_best - old_g_best) < tolerance:
         #we could implement this by storing the last 15 vals in an array and then computing stdev
 
+        """
+
         print("iteration: ", i+1 )
         print("This is the velocity matrix: ")
         print(vel_matrix)
@@ -59,6 +61,8 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
         print(p_best)
         print("this is the g best: ")
         print(g_best)
+
+        """
 
         #roll simply shifts the numpy matrix over by 1.  So,
         # [1, 2, 3]
@@ -75,10 +79,14 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
             break
 
         #input() #
+    print("The global best was ", g_best[:-1])
+    print("The image was ", g_best[-1])
 
 mpso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
      max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
      function = tf.Spherefunct)
+
+
 
     #terminating conditions: will either terminate when
     #1. max iterations reached
