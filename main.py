@@ -35,7 +35,7 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
     pos_matrix, vel_matrix, p_best, g_best, v_max = ini.initializer(num_part=num_part, num_dim=num_dim, 
                                             alpha=alpha, upper_bound=upper_bound,
                                             lower_bound=lower_bound, function = function)
-    
+
     # Store the image of past g_bests for the second terminating condition.  Multiplies a ones array by the maximum possible value
     # So that comparison starts out always being true.
     old_g_best = np.finfo(p.DTYPE).max*np.ones(mv_iteration, dtype=p.DTYPE)
@@ -81,13 +81,16 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
             break
 
         #input() #
+
+        #Use function value instead of image
     print("The global best was ", g_best[:-1])
-    print("The image was ", g_best[-1])
+    print("The best value was ", g_best[-1])
+    print(f"We had {i+1} iterations")
     print(f"The function took {time.time()-start} seconds to run")
 
 mpso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
      max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-     function = tf.Spherefunct)
+     function = tf.Sphere)
 
 
 
