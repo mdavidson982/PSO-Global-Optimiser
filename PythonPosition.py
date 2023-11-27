@@ -4,7 +4,7 @@
 import random
 import numpy as np
 g_best = "bruh"; #matrix, vector (global best)
-p_best = "bruh"; #matrix, m*n (pesonal best)
+p_best = "bruh"; #matrix, m*n (personal best)
 num_part = ["bruh","bruh"]; #int (range)
 num_dim = "bruh"; #int
 v_part = "bruh"; #matrix m*n (velocity)
