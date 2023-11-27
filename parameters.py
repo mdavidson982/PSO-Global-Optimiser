@@ -22,7 +22,7 @@ LOWER_BOUND = np.array([-100, -100, -100, -100], dtype=np.float64)
 ALPHA: np.float64 = 0.3
 
 #Learning parameters:
-#Weight part of inertia compoennet
+#Weight part of inertia component
 W: np.float64 = 0.9 #velocity, Randomized from 0 - 1
 
 #Acceleration coefficients
