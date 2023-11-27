@@ -12,10 +12,10 @@ def good_learning_parameters(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
 #initialization variables
 #calls the initialization function in the initializer.py. 
 #Uses the parameter values created in parameters.py
-#Returns: pos_matrix, an ndarray that keep the position of each particle (Initialized with random values for each dimmension)
-#         vel_matrix, an ndarray that keeps the velocity for each particle (Initialized with random values for each dimmension)
-#         p_best, an ndarray that keeps the personal minimum for each particle in each dimmension
-#         g_best, an ndarray that keeps the global minimum between all particles in each dimmension
+#Returns: pos_matrix, an ndarray that keep the position of each particle (Initialized with random values for each dimension)
+#         vel_matrix, an ndarray that keeps the velocity for each particle (Initialized with random values for each dimension)
+#         p_best, an ndarray that keeps the personal minimum for each particle in each dimension
+#         g_best, an ndarray that keeps the global minimum between all particles in each dimension
 #         v_max, float based on the size of the area, this is the max velocity each particle can move 
 
 
@@ -70,7 +70,7 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
         # [1, 2, 3]
         # Where 1 might be the first image of g_best 2 might be the second image of g_best etc. becomes
         # [3, 1, 2]
-        # We also want to store the image of the newest g_best.  This is done by replace what would be 3 in the above with the new image.
+        # We also want to store the image of the newest g_best.  This is done by replacing what would be 3 in the above with the new image.
         # If 0 is the new image of g_best, then the above array becomes
         # [0, 1, 2] 
         old_g_best = np.roll(old_g_best, 1)
