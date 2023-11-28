@@ -4,6 +4,8 @@ import parameters as p
 import update as up
 import testfuncts as tf
 import time
+import visualization as v
+import tkinter as tk
 
 
 def good_learning_parameters(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
@@ -19,13 +21,15 @@ def good_learning_parameters(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
 #         v_max, float based on the size of the area, this is the max velocity each particle can move 
 
 
-#Here we will place the MPSO function. To achieve this we will loop through the velocity update, position update,
+#Here we will place the pso function. To achieve this we will loop through the velocity update, position update,
 #p_best, and g_best functions until we get a satisfactory answer, and loop under the number of times defined in
 #max iteration var
-def mpso(num_part: int, num_dim: int, alpha: p.DTYPE, 
-                upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], 
+
+
+def pso(num_part: int, num_dim: int, alpha: p.DTYPE, 
+                upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, 
                 max_iterations: int, w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE, tolerance: p.DTYPE,
-                mv_iteration: int, function):
+                mv_iteration: int, visualizer: v.Visualization, function):
     start = time.time()
     
     if not good_learning_parameters(w, c1, c2):
@@ -40,11 +44,13 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
     # So that comparison starts out always being true.
     old_g_best = np.finfo(p.DTYPE).max*np.ones(mv_iteration, dtype=p.DTYPE)
 
+    visualizer.start(xpos=pos_matrix, lower_bounds=lower_bound, upper_bounds=upper_bound)
+
     for i in range (max_iterations):
         vel_matrix = up.update_velocity(v_part=vel_matrix, x_pos=pos_matrix, g_best=g_best, p_best=p_best, w=w, c1=c1, c2=c2)
         vel_matrix = up.verify_bounds(upper_bound = v_max, lower_bound = -v_max, matrix = vel_matrix)
         pos_matrix = up.update_position(x_pos=pos_matrix, v_part=vel_matrix)
-        #added verify bound to the MPSO loop. Assumed position matrix was the correct input. Putting this comment here to make sure that's right later when we review.
+        #added verify bound to the pso loop. Assumed position matrix was the correct input. Putting this comment here to make sure that's right later when we review.
         pos_matrix = up.verify_bounds(upper_bound = upper_bound, lower_bound = lower_bound, matrix = pos_matrix)
         p_best = up.update_p_best(pos_matrix= pos_matrix, past_p_best = p_best, function = function)
         g_best = up.update_g_best(p_best=p_best)
@@ -80,17 +86,33 @@ def mpso(num_part: int, num_dim: int, alpha: p.DTYPE,
         if (abs(old_g_best[0]-old_g_best[-1])/(abs(old_g_best[-1]) + tolerance)) < tolerance:
             break
 
+        visualizer.updateParticles(pos_matrix)
+
         #input() #
 
         #Use function value instead of image
+
+
     print("The global best was ", g_best[:-1])
     print("The best value was ", g_best[-1])
     print(f"We had {i+1} iterations")
     print(f"The function took {time.time()-start} seconds to run")
 
-mpso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
+"""
+pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
      max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-     function = tf.Sphere)
+     enable_visualizer=True, function = tf.Sphere)
+"""
+
+root = tk.Tk()
+visualizer = v.Visualization(root)
+
+
+pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
+     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
+     visualizer=visualizer, function = tf.Sphere)
+
+root.mainloop()
 
 
 

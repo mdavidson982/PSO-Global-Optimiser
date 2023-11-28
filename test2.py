@@ -1,8 +1,5 @@
 import numpy as np
 import time
 
-start = time.time_ns()
-z: np.float64 = 10**-6
-print(time.time_ns() - start)
-
-print(z)
+array = np.array(((1, 2, 3), (1, 2, 3)))
+print(array[0])

@@ -3,7 +3,7 @@ import update as up
 import parameters as p
 
 
-def _Default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:
+def _Default(array: p.ADTYPE) -> p.DTYPE:
     """Private Function. Really Shouldn't be used.
     _Default is used as the default optimization function in initializer, this is really for debugging.
     Ideally, we will have other functions for more complex optimization problems that will take place of default"""
@@ -14,8 +14,8 @@ def _Default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:
 
 
 def initializer(num_part: int, num_dim: int, alpha: p.DTYPE, 
-                upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], 
-                function = _Default) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+                upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, 
+                function = _Default) -> (p.ADTYPE, p.ADTYPE, p.ADTYPE, p.ADTYPE, p.ADTYPE):
     """ Initialization function for the PSO algorithm. 
 
     ------------Parameters (input)------------
@@ -57,7 +57,7 @@ def initializer(num_part: int, num_dim: int, alpha: p.DTYPE,
 
     return pos_matrix, vel_matrix, p_best, g_best, v_max
 
-def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE]) -> np.ndarray:
+def _x_initializer(num_dim: int, num_part: int, upper_bound: p.ADTYPE, lower_bound: p.ADTYPE) -> p.ADTYPE:
     """Private function. Used in initializer. Randomly initializes the positions of each particle within the upper and lower bound limits of each dimmension"""
     scalingfactor = upper_bound - lower_bound
 
@@ -68,7 +68,7 @@ def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray[p.DTYPE]
 
     return pos_matrix
 
-def _v_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE], alpha: p.DTYPE) -> (np.ndarray, np.ndarray):
+def _v_initializer(num_dim: int, num_part: int, upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, alpha: p.DTYPE) -> (p.ADTYPE, p.ADTYPE):
     """Private function. Used in initializer. Randomly initializes the velocities of each particle
     """
     if alpha < 0 or alpha >= 1:
