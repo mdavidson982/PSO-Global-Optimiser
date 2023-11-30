@@ -1,18 +1,25 @@
 import numpy as np
 import parameters as p
 
-#putting a test function here
-def Sphere(array: p.ADTYPE) -> np.float64:
-    return np.sum(array ** 2)
+
+def sphereGenerator(optimum: p.ADTYPE):
+    #putting a test function here
+    def Sphere(x: p.ADTYPE) -> np.float64:
+        z = x - optimum
+        return np.sum((z) ** 2)
+    return Sphere
 
 #Rosenberg
-def rosenbrock(x):
-    # Calculate the Rosenbrock function value for a given input x
-    return np.sum(100 * (x[:-1] - x[1:]**2)**2 + (1 - x[1:])**2)
+def rosenbrockGenerator(optimum:p.ADTYPE):
+    def rosenbrock(x):
+        # Calculate the Rosenbrock function value for a given input x
+        z = x - optimum
+        return np.sum(100 * (z[:-1] - z[1:]**2)**2 + (1 - z[1:])**2)
+    return rosenbrock
 
 #Rastrigin
-def rastrigin(x):
-    # Calculate the Rastrigin function value for a given input x
-    return np.sum(x**2 - 10*(np.cos(2*np.pi*x) + 10))
-
-def 
+def rastriginGenerator(optimum:p.ADTYPE):
+    def rastrigin(x):
+        # Calculate the Rastrigin function value for a given input x
+        z = x - optimum
+        return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10))
