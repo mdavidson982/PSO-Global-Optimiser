@@ -17,7 +17,7 @@ TOLERANCE: np.float64 = 10**-6
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
 UPPER_BOUND = np.array([20, 20], dtype=np.float64)
 LOWER_BOUND = np.array([-20, -20], dtype=np.float64)
-OPTIMUM = np.array([10,10], dtype=np.float64)
+OPTIMUM = np.array([10,-10], dtype=np.float64)
 
 #Velocity restrictor [0-1].  
 ALPHA: np.float64 = 0.1
