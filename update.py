@@ -49,14 +49,15 @@ def update_velocity(v_part: p.ADTYPE, x_pos: p.ADTYPE, g_best: p.ADTYPE,
     #Random movement influence. Technically not necessary but the random movement values
     #Make the movement for each particle more 'natural'
     num_dim = x_pos.shape[0]
-    r1 = np.random.rand(num_dim, 1)
-    r2 = np.random.rand(num_dim, 1)
+    num_col = x_pos.shape[1]
+    r1 = np.random.rand(num_dim, num_col)
+    r2 = np.random.rand(num_dim, num_col)
 
     #Update Velocity Formula
     #v_part * w: Inertia term. It allows particles to retain some of their previous velocity
     #r1 * c1 * (x_pos - p_best[:-1]): Personal Cognitive Component. Pulls the particle towards the personal best (p_best) position
     #r2 * c2 * (x_pos - g_best[:-1, np.newaxis]): Global Cognitive Component. Pulls the partivle towards the global best position
-    v_part = v_part*w + r1*c1*(x_pos-p_best[:-1]) + r2*c2*(x_pos-g_best[:-1, np.newaxis])
+    v_part = v_part*w + r1*c1*(p_best[:-1]-x_pos) + r2*c2*(g_best[:-1, np.newaxis]-x_pos)
     return v_part
 
 

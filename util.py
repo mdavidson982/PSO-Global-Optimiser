@@ -2,22 +2,24 @@ import parameters as p
 import numpy as np
 
 
-def Scale(lb: p.ADTYPE, ub: p.ADTYPE, array) -> p.ADTYPE:
+def Scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
     Take an array of values 0-1, and project them to the new space.
     """
     scale_factor = ub-lb
-    array[:] *= scale_factor[:, np.newaxis]
-    array[:] += lb[:, np.newaxis]
-    return array
+    new_array = array.copy()
+    new_array[:] *= scale_factor[:, np.newaxis]
+    new_array[:] += lb[:, np.newaxis]
+    return new_array
 
-def Descale(lb: p.ADTYPE, ub: p.ADTYPE, array) -> p.ADTYPE:
+def Descale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     scale_factor = ub-lb
-    array[:] -= lb[:, np.newaxis]
-    array[:] /= scale_factor[:, np.newaxis]
-    return array
+    new_array = array.copy()
+    new_array -=  lb[:, np.newaxis]
+    new_array[:] /= scale_factor[:, np.newaxis]
+    return new_array
 
-def Project(old_lb: p.ADTYPE, old_ub: p.ADTYPE, new_lb: p.ADTYPE, new_ub: p.ADTYPE, array) -> p.ADTYPE:
+def Project(old_lb: p.ADTYPE, old_ub: p.ADTYPE, new_lb: p.ADTYPE, new_ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     array = Descale(lb = old_lb, ub = old_ub, array=array)
     return Scale(lb=new_lb, ub=new_ub, array=array)
 
