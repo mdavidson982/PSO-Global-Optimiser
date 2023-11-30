@@ -132,9 +132,8 @@ def TestVisualizer():
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
     function = tf.Sphere)
 
-    vis = Visualization(root=root, pso=pso, update_time = 100)
+    vis = Visualization(root=root, pso=pso, update_time = 1000)
     vis.start()
-    print(pso.g_best)
     root.mainloop()
 
 TestVisualizer()
