@@ -81,7 +81,7 @@ class Visualization:
 
         for i in range(coords.shape[1]):
             canvas_x = coords[0][i]
-            canvas_y = coords[0][i]
+            canvas_y = coords[1][i]
             space_x = np.round(self.pso.pos_matrix[0][i], 2)
             space_y = np.round(self.pso.pos_matrix[1][i], 2)
             text = self.canvas.create_text(canvas_x, canvas_y-10, text=f"({space_x}, {space_y})", fill="black", font=("Times New Roman", 10))
