@@ -23,3 +23,4 @@ def rastriginGenerator(optimum:p.ADTYPE):
         # Calculate the Rastrigin function value for a given input x
         z = x - optimum
         return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10))
+    return rastrigin

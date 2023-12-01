@@ -63,7 +63,8 @@ class Visualization:
         self.control_menu = tk.Frame(self.main_frame, width=int(self.width*.8), height=(int(self.height*.15)), highlightbackground="blue", highlightthickness=3)
         self.control_menu.pack(pady=10)
 
-        self.display = tk.Frame(self.main_frame, width=int(self.width*.8)+100, height = (int(self.height*.75))+100, highlightbackground="black", highlightthickness=5)
+        self.root.update_idletasks()
+        self.display = tk.Frame(self.main_frame, width=int(self.width*.8), height = (int(self.height*.75)), highlightbackground="black", highlightthickness=5)
         self.display.pack(pady=10)
         self.root.update_idletasks()
 
@@ -127,11 +128,11 @@ class Visualization:
 
 
 def TestVisualizer():
-    sphereFunc = tf.sphereGenerator(p.OPTIMUM)
+    Func = tf.rosenbrockGenerator(p.OPTIMUM)
     root = tk.Tk()
     pso = pSO.PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-    function = sphereFunc)
+    function = Func)
 
     vis = Visualization(root=root, pso=pso, update_time = 1000)
     vis.start()
