@@ -8,17 +8,16 @@ import testfuncts as tf
 FPS = 20
 FRAME_MS = 1000//FPS
 
-def _checkDim(array: p.ADTYPE):
-    return array.shape[0] == 2
+
 
 def _translateCoords(lb: p.ADTYPE, ub: p.ADTYPE, xpos: p.ADTYPE, canvas_width: int, canvas_height: int):
 
-    if not _checkDim(xpos):
+    if not u.check_dim(xpos, 2):
         raise Exception("not a two by two")
 
     new_lb = np.array((0, 0), dtype=p.DTYPE)
     new_ub = np.array((canvas_width, canvas_height), dtype=p.DTYPE)
-    coords = u.Project(lb, ub, new_lb, new_ub, xpos)
+    coords = u.project(lb, ub, new_lb, new_ub, xpos)
 
     # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
     # axis conforms to the coordinate system of tkinrer.
@@ -35,8 +34,6 @@ class Particle:
     def __init__(self, text, dot):
         self.text = text
         self.dot = dot
-
-        
 
 class Visualization:
 
@@ -91,9 +88,9 @@ class Visualization:
             
             self.particles.append(particle)
         self.root.update()
-        self.root.after(FRAME_MS, self.updateParticles)
+        self.root.after(FRAME_MS, self.update_particles)
 
-    def updateParticles(self):
+    def update_particles(self):
         
         shouldTerminate = self.pso.update()
         coords = _translateCoords(self.pso.lower_bound, self.pso.upper_bound, self.pso.pos_matrix, self.canvas.winfo_width(), self.canvas.winfo_height())
@@ -124,11 +121,12 @@ class Visualization:
 
         if not shouldTerminate:
             self.root.update()
-            self.root.after(0, self.updateParticles)
+            self.root.after(0, self.update_particles)
 
 
 def TestVisualizer():
-    Func = tf.rosenbrockGenerator(p.OPTIMUM)
+
+    Func = tf.TF.generate_function(p.FUNCT, p.OPTIMUM, p.BIAS)
     root = tk.Tk()
     pso = pSO.PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,

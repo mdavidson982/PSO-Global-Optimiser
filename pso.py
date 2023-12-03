@@ -5,8 +5,7 @@ import update as up
 import testfuncts as tf
 import time
 
-
-def good_learning_parameters(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
+def validate_learn_params(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
     return w < 1 and w > 0.5*(c1+c2)
 
 #initialization variables
@@ -62,7 +61,7 @@ class PSO:
         self.mv_iteration = mv_iteration
         self.function = function
 
-        if not good_learning_parameters(w, c1, c2):
+        if not validate_learn_params(w, c1, c2):
             raise Exception("Bad learning parameters")
 
     def initialize(self):
@@ -96,12 +95,12 @@ class PSO:
 
         self.iterations += 1
 
-        return self.shouldTerminate()
+        return self.should_terminate()
 
-    def shouldTerminate(self) -> bool:
-        return self.iterations >= self.max_iterations or self.secondTermination()
+    def should_terminate(self) -> bool:
+        return self.iterations >= self.max_iterations or self.second_termination()
     
-    def secondTermination(self) -> bool:
+    def second_termination(self) -> bool:
         return (abs(self.old_g_best[0]-self.old_g_best[-1])/(abs(self.old_g_best[-1]) + self.tolerance)) < self.tolerance
 
 # Non-graphical runner
@@ -112,7 +111,7 @@ class PSORunner:
         self.pso = pso
 
     # Run PSO manually.
-    def runPSO(self):
+    def run_PSO(self):
         start = time.time()
         self.pso.initialize()
         shouldTerminate = False
@@ -136,15 +135,15 @@ pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPP
      enable_visualizer=True, function = tf.Sphere)
 """
 
-def TestPSO():
+def test_PSO():
     pso = PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
         max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
         function = tf.Sphere)
 
     runner = PSORunner(pso)
-    runner.runPSO()
+    runner.run_PSO()
 
-#TestPSO()
+#testPSO()
 
 
 

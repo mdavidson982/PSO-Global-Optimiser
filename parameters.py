@@ -1,5 +1,8 @@
 import numpy as np
 
+DTYPE = np.float64 # Data type to be used.
+ADTYPE = np.ndarray[DTYPE] #Alias of array datatype, for ease of use
+
 #Number of dimensions of problem
 NUM_DIM: int = 2
 #Number of particles that we want to use
@@ -14,10 +17,13 @@ NO_MOVEMENT_TERMINATION: int = 20
 #Part of second termination criteria.  The tolerance which defines how small updates should be.
 TOLERANCE: np.float64 = 10**-6
 
+FUNCT = "rosenbrock"
+
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
-UPPER_BOUND = np.array([20, 20], dtype=np.float64)
-LOWER_BOUND = np.array([-20, -20], dtype=np.float64)
-OPTIMUM = np.array([10,-10], dtype=np.float64)
+UPPER_BOUND = np.array([20, 20], dtype=DTYPE)
+LOWER_BOUND = np.array([-20, -20], dtype=DTYPE)
+OPTIMUM = np.array([10,-10], dtype=DTYPE)
+BIAS: DTYPE = 450
 
 #Velocity restrictor [0-1].  
 ALPHA: np.float64 = 0.1
@@ -30,5 +36,3 @@ W: np.float64 = 0.5 #velocity, Randomized from 0 - 1
 C1: np.float64 = 0.3 #Cognitive parameter.  Random number from [0 - 2), fixed throughout the function
 C2: np.float64 = 0.3 #Social parameter.  Random number from [0 - 2), fixed throughout the function
 
-DTYPE = np.float64
-ADTYPE = np.ndarray[DTYPE]

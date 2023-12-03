@@ -3,7 +3,7 @@ import update as up
 import parameters as p
 
 
-def _Default(array: p.ADTYPE) -> p.DTYPE:
+def _default(array: p.ADTYPE) -> p.DTYPE:
     """Private Function. Really Shouldn't be used.
     _Default is used as the default optimization function in initializer, this is really for debugging.
     Ideally, we will have other functions for more complex optimization problems that will take place of default"""
@@ -15,7 +15,7 @@ def _Default(array: p.ADTYPE) -> p.DTYPE:
 
 def initializer(num_part: int, num_dim: int, alpha: p.DTYPE, 
                 upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, 
-                function = _Default) -> (p.ADTYPE, p.ADTYPE, p.ADTYPE, p.ADTYPE, p.ADTYPE):
+                function = _default) -> (p.ADTYPE, p.ADTYPE, p.ADTYPE, p.ADTYPE, p.ADTYPE):
     """ Initialization function for the PSO algorithm. 
 
     ------------Parameters (input)------------
