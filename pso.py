@@ -43,11 +43,14 @@ class PSO:
     v_max: p.ADTYPE
     old_g_best: p.ADTYPE
     iterations: int = 0
+    optimum: p.ADTYPE
+    bias: p.DTYPE
+    functionID: int | str
 
     def __init__(self, num_part: int, num_dim: int, alpha: p.DTYPE, 
                 upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, 
                 max_iterations: int, w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE, tolerance: p.DTYPE,
-                mv_iteration: int, function):
+                mv_iteration: int, optimum: p.ADTYPE, bias: p.DTYPE, functionID: str | int):
         self.num_part = num_part
         self.num_dim = num_dim
         self.alpha = alpha
@@ -59,7 +62,10 @@ class PSO:
         self.c2 = c2
         self.tolerance = tolerance
         self.mv_iteration = mv_iteration
-        self.function = function
+        self.optimum = optimum
+        self.bias = bias
+        self.functionID = functionID
+        self.function = tf.TF.generate_function(functionID=functionID, optimum=optimum, bias=bias)
 
         if not validate_learn_params(w, c1, c2):
             raise Exception("Bad learning parameters")
@@ -136,14 +142,16 @@ pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPP
 """
 
 def test_PSO():
+
+
     pso = PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
         max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-        function = tf.Sphere)
+        optimum=p.OPTIMUM, bias=p.BIAS, functionID=p.FUNCT)
 
     runner = PSORunner(pso)
     runner.run_PSO()
 
-#testPSO()
+test_PSO()
 
 
 

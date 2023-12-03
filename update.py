@@ -6,7 +6,6 @@ import parameters as p
 def _Default(array: p.ADTYPE) -> p.DTYPE:
     return 1 
 
-
 def update_p_best(pos_matrix: p.ADTYPE, past_p_best: p.ADTYPE, function = _Default) -> p.ADTYPE:
     """Updates the personal best for each particle in each iteration (if the updated value is smaller than the previous value).
     This is completed by preforming the optomization function on each particle
@@ -60,12 +59,10 @@ def update_velocity(v_part: p.ADTYPE, x_pos: p.ADTYPE, g_best: p.ADTYPE,
     v_part = v_part*w + r1*c1*(p_best[:-1]-x_pos) + r2*c2*(g_best[:-1, np.newaxis]-x_pos)
     return v_part
 
-
 def update_position(x_pos: p.ADTYPE, v_part: p.ADTYPE):
     """Updates the position of a particle by adding the velocity to the position for each dimmension
     returns an updated position ndarray"""
     return x_pos + v_part
-
 
 def verify_bounds(upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, matrix: p.ADTYPE):
 

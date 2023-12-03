@@ -1,7 +1,6 @@
 import parameters as p
 import numpy as np
 
-
 def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
     Take an array of values 0-1, and project them to the new space.

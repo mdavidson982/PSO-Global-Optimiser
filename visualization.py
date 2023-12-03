@@ -4,11 +4,11 @@ import parameters as p
 import util as u
 import pso as pSO
 import testfuncts as tf
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 FPS = 20
 FRAME_MS = 1000//FPS
-
-
 
 def _translateCoords(lb: p.ADTYPE, ub: p.ADTYPE, xpos: p.ADTYPE, canvas_width: int, canvas_height: int):
 
@@ -87,8 +87,10 @@ class Visualization:
             particle = Particle(text, dot)
             
             self.particles.append(particle)
+
         self.root.update()
         self.root.after(FRAME_MS, self.update_particles)
+
 
     def update_particles(self):
         
@@ -125,12 +127,10 @@ class Visualization:
 
 
 def TestVisualizer():
-
-    Func = tf.TF.generate_function(p.FUNCT, p.OPTIMUM, p.BIAS)
     root = tk.Tk()
     pso = pSO.PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-    function = Func)
+    optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
 
     vis = Visualization(root=root, pso=pso, update_time = 1000)
     vis.start()
