@@ -152,12 +152,12 @@ class Visualization:
                               norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels
                               ) #Make the contour
         print(contour)
-        fig.colorbar(contour)
+        #fig.colorbar(contour)
         
         #The following removes whitespace
-        #ax.axis('off')
-        #fig.gca().set_axis_off()
-        #fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        ax.axis('off')
+        fig.gca().set_axis_off()
+        fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         
         fig.savefig(self.contour_img_path) #Save file for use as a background
         self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
