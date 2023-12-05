@@ -6,7 +6,7 @@ ADTYPE = np.ndarray[DTYPE] #Alias of array datatype, for ease of use
 #Number of dimensions of problem
 NUM_DIM: int = 2
 #Number of particles that we want to use
-NUM_PART: int = 50
+NUM_PART: int = 500
 
 #Max number of iterations. This determines the number of times the MPSO algorithm updates
 MAX_ITERATIONS: int = 1000
@@ -17,11 +17,11 @@ NO_MOVEMENT_TERMINATION: int = 20
 #Part of second termination criteria.  The tolerance which defines how small updates should be.
 TOLERANCE: np.float64 = 10**-6
 
-FUNCT = "rosenbrock"
+FUNCT = "sphere"
 
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
-UPPER_BOUND = np.array([1000, 1000], dtype=DTYPE)
-LOWER_BOUND = np.array([-1000, -1000], dtype=DTYPE)
+UPPER_BOUND = np.array([1, 1], dtype=DTYPE)
+LOWER_BOUND = np.array([-1, -1], dtype=DTYPE)
 OPTIMUM = np.array([0, 0], dtype=DTYPE)
 BIAS: DTYPE = 45
 

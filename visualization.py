@@ -7,25 +7,33 @@ import testfuncts as tf
 from matplotlib.figure import Figure
 from matplotlib.colors import LogNorm
 
-FPS = 20
-FRAME_MS = 1000//FPS
-DPI = 100 #dots per inch
+FPS = 20 #How many frames per second the animation should run at
+FRAME_MS = 1000//FPS #How many milliseconds each frame appears on screen
+DPI = 100 #dots per inch that matplotlib should use for graphics
 
 def _translateCoords(lb: p.ADTYPE, ub: p.ADTYPE, xpos: p.ADTYPE, canvas_width: int, canvas_height: int):
-
+    """ Function which takes an array of values in a domain, and maps them to their appropriate posiiton on the canvas."""
     if not u.check_dim(xpos, 2):
         raise Exception("not a two by two")
 
     new_lb = np.array((0, 0), dtype=p.DTYPE)
     new_ub = np.array((canvas_width, canvas_height), dtype=p.DTYPE)
-    coords = u.project(lb, ub, new_lb, new_ub, xpos)
+    coords = u.project(lb, ub, new_lb, new_ub, xpos) #Coordinates on the tkinter canvas
 
     # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
-    # axis conforms to the coordinate system of tkinrer.
+    # axis conforms to the coordinate system of tkinter.
     coords[1] = np.ones((1, coords.shape[1]))*canvas_height - coords[1]
     return coords
 
 class Particle:
+    """
+    Keeps track of the visual representation of a particle.
+
+    delta_x:  amount particle should move per animation frame in x direction
+    delta_y:  amount particle should move per animation frame in y direction
+    text:  tkinter ID of the text label which shows the coordinates of the particle
+    dot:  tkinter ID of the circle which represents the particle
+    """
     delta_x: int
     delta_y: int
 
@@ -37,6 +45,23 @@ class Particle:
         self.dot = dot
 
 class Visualization:
+    """
+    Runs a visual representation of test functions.
+
+    width:  width of visualization screen
+    height:  height of visualization screen
+    pso:  PSO instance which this visualizer controls
+    particles:  Visual representation of the particles from PSO
+    
+    root:  tkinter root
+    control_menu:  frame for top bar, which allows user to control the visualization
+    display:  frame which visually displays the PSO algorithm
+    part_canv:  Particle canvas.  Shows the contour plot and PSO particles.
+    contour_img:  Contour plot of the function to be optimized.  Used as a background for part_canv
+    
+    update_time:  How many milliseconds each iteration of PSO should last.  Default is 1 second.
+    contour_img_path:  Path to temporary image of the contour diagram.
+    """
 
     #Width and height of the visualization screen
     width: int
@@ -59,12 +84,13 @@ class Visualization:
     
     def __init__(self, root: tk.Tk, pso: pSO.PSO, update_time: int = 1000):
         u.clear_temp() #Clear temporary png files
-        self.update_time = update_time - update_time % FRAME_MS #make the update time a multiple of 25 for convenience
+        self.update_time = update_time - update_time % FRAME_MS # Ensures that an iteration of PSO can evenly be divided into frames
         self.root = root
         self.pso = pso
-        self.contour_img_path = u.make_tempfile_path()
+        self.contour_img_path = u.make_tempfile_path() # Path to the contour image that will be saved later.
 
         self.root.title("Visualization")
+        # Make the visualization full screen
         self.width = self.root.winfo_screenwidth()
         self.height = self.root.winfo_screenheight()
         self.root.geometry(f"{self.width}x{self.height}")
@@ -80,20 +106,25 @@ class Visualization:
         self.display.pack(pady=10)
         self.root.update_idletasks()
 
+        # Particle canvas setup.
         self.part_canv = tk.Canvas(self.display, width = self.display.winfo_width(), height=self.display.winfo_height())
         self.part_canv.pack(fill=tk.BOTH, expand=True)
         self.root.update_idletasks()
-        self.make_contour()
-        self.part_canv.create_image(0, 0, anchor=tk.NW, image=self.contour_img)
+        self.make_contour() # Generate contour plot, and set as background of particle canvas
 
         self.root.update_idletasks()
 
     def start(self):
+        """Initializes PSO, and begins the visualization"""
         self.pso.initialize()
 
-        coords = _translateCoords(self.pso.lower_bound, self.pso.upper_bound, self.pso.pos_matrix, self.part_canv.winfo_width(), self.part_canv.winfo_height())
+        # Map domain coordinates to the canvas
+        coords = _translateCoords(self.pso.lower_bound, self.pso.upper_bound, 
+                                  self.pso.pos_matrix, self.part_canv.winfo_width(), 
+                                  self.part_canv.winfo_height())
+        
+        # Based on particles 
         self.particles = []
-
         for i in range(coords.shape[1]):
             canvas_x = coords[0][i]
             canvas_y = coords[1][i]
@@ -102,8 +133,6 @@ class Visualization:
             text = self.part_canv.create_text(canvas_x, canvas_y-10, text=f"({space_x}, {space_y})", fill="black", font=("Times New Roman", 10))
             dot = self.part_canv.create_oval(canvas_x, canvas_y, canvas_x, canvas_y, outline="blue", fill="blue", width = 10)
             particle = Particle(text, dot)
-            self.part_canv.tag_raise(particle)
-            
             self.particles.append(particle)
 
         self.root.update()
@@ -122,15 +151,17 @@ class Visualization:
                               extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
                               norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels
                               ) #Make the contour
-        #fig.colorbar(contour)
+        print(contour)
+        fig.colorbar(contour)
         
         #The following removes whitespace
         #ax.axis('off')
         #fig.gca().set_axis_off()
-        fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        #fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         
         fig.savefig(self.contour_img_path) #Save file for use as a background
         self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
+        self.part_canv.create_image(0, 0, anchor=tk.NW, image=self.contour_img)
 
     def update_particles(self):
         
@@ -165,6 +196,8 @@ class Visualization:
         if not shouldTerminate:
             self.root.update()
             self.root.after(0, self.update_particles)
+        else:
+            print(f"The best position was {self.pso.g_best[:-1]} with a value of {self.pso.g_best[-1]}")
 
 
 def TestVisualizer():
@@ -173,7 +206,8 @@ def TestVisualizer():
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
     optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
 
-    vis = Visualization(root=root, pso=pso, update_time = 10000)
+    vis = Visualization(root=root, pso=pso, update_time = 50)
+    
     vis.start()
     root.mainloop()
 

@@ -1,3 +1,5 @@
+"various utility functions that have no other home for PSO"
+
 import parameters as p
 import numpy as np
 import consts as c
@@ -6,7 +8,8 @@ import time
 
 def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
-    Take an array of values 0-1, and project them to the new space.
+    Take an array of values 0-1, and scale them to a new space. 
+    Works in tandem with descale and project functions.
     """
     scale_factor = ub-lb
     new_array = array.copy()
@@ -15,6 +18,10 @@ def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     return new_array
 
 def descale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
+    """
+    Take an array of values 0-1, and descale them to a new space.
+    Works in tandem with scale and project functions.
+    """
     scale_factor = ub-lb
     new_array = array.copy()
     new_array -=  lb[:, np.newaxis]
@@ -22,10 +29,12 @@ def descale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     return new_array
 
 def project(old_lb: p.ADTYPE, old_ub: p.ADTYPE, new_lb: p.ADTYPE, new_ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
+    """Project an array of values from one domain to a new one."""
     array = descale(lb = old_lb, ub = old_ub, array=array)
     return scale(lb=new_lb, ub=new_ub, array=array)
 
 def check_dim(array: p.ADTYPE, dim: int) -> bool:
+    """Determine if the dimensions of the array are equal to the test dimensions"""
     return array.shape[0] == dim
 
 def dimension_to_xy_bounds(lb: p.ADTYPE, ub: p.ADTYPE) -> (p.ADTYPE, p.ADTYPE):
@@ -39,6 +48,7 @@ def dimension_to_xy_bounds(lb: p.ADTYPE, ub: p.ADTYPE) -> (p.ADTYPE, p.ADTYPE):
     return np.array((lb[c.XDIM], ub[c.XDIM])), np.array((lb[c.YDIM], ub[c.YDIM]))
 
 def clear_temp() -> None:
+    """Clears the temp directory of png files used in the visualizer"""
     files = os.listdir(c.TEMP_PATH)
 
     for file_name in files:
@@ -49,9 +59,13 @@ def clear_temp() -> None:
             print(f"could not delete file {file_name}")
 
 def make_tempfile_path() -> str:
+    """Canonical temp path for png files"""
     return os.path.join(c.TEMP_PATH, f"TEMP{time.time_ns()}")
 
+"""Below are functions used to test projections"""
+
 def test_scale():
+    
     test_lb = np.array((-1, -3), dtype = p.DTYPE)
     test_ub = np.array((5, 8), dtype=p.DTYPE)
     array = np.random.rand(2, 5)

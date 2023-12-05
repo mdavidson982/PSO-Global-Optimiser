@@ -48,7 +48,11 @@ class TestFuncts:
             func = TF._rastrigin_contour
         else:
             raise Exception(f"functionID {functionID} does not match any available option")
-
+        print(f"x: {x}")
+        print(f"x: {y}")
+        func(optimum=optimum, bias=bias, x=x, y=y)
+        print(f"x: {x}")
+        print(f"x: {y}")
         return x, y, func(optimum=optimum, bias=bias, x=x, y=y)
 
     def _sphere_gen(optimum: p.ADTYPE, bias: p.DTYPE):
@@ -56,12 +60,11 @@ class TestFuncts:
         #putting a test function here
         def sphere(x: p.ADTYPE) -> p.DTYPE:
             z = x - optimum
-            return np.sum((z) ** 2 + bias)
+            return np.sum((z) ** 2) + bias
         return sphere
     
     def _sphere_contour(optimum: p.ADTYPE, bias: p.DTYPE, x: p.ADTYPE, y: p.ADTYPE):
         x, y = _optimumShift(optimum, x, y)
-        x = x - 1
         return (x)**2 + (y)**2 + bias
 
     #Rosenbrock
@@ -78,7 +81,7 @@ class TestFuncts:
         x, y = _optimumShift(optimum, x, y)
         x = x + 1 # Part of the rosenbrock shift
         y = y + 1 # Part of the rosenbrock shift
-        return 100*(x**2 - y)**2 + (x - 1)**2 + bias #TO BE IMPLEMENTED LATER
+        return 100*(x**2 - y)**2 + (x - 1)**2 + bias
 
     #Rastrigin
     def _rastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
