@@ -12,21 +12,27 @@ def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     Works in tandem with descale and project functions.
     """
     scale_factor = ub-lb
-    new_array = array.copy()
-    new_array[:] *= scale_factor[:, np.newaxis]
-    new_array[:] += lb[:, np.newaxis]
-    return new_array
+    if array.ndim == 2:
+        new_array = array.copy()
+        new_array[:] *= scale_factor[:, np.newaxis]
+        new_array[:] += lb[:, np.newaxis]
+        return new_array
+    if array.ndim == 1:
+         return array*scale_factor + lb
 
 def descale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
-    Take an array of values 0-1, and descale them to a new space.
+    Take an array of values, and descale them to be 0-1.
     Works in tandem with scale and project functions.
     """
     scale_factor = ub-lb
-    new_array = array.copy()
-    new_array -=  lb[:, np.newaxis]
-    new_array[:] /= scale_factor[:, np.newaxis]
-    return new_array
+    if array.ndim == 2:
+        new_array = array.copy()
+        new_array -=  lb[:, np.newaxis]
+        new_array[:] /= scale_factor[:, np.newaxis]
+        return new_array
+    if array.ndim == 1:
+        return (array-lb)/scale_factor
 
 def project(old_lb: p.ADTYPE, old_ub: p.ADTYPE, new_lb: p.ADTYPE, new_ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """Project an array of values from one domain to a new one."""
@@ -69,6 +75,7 @@ def test_scale():
     test_lb = np.array((-1, -3), dtype = p.DTYPE)
     test_ub = np.array((5, 8), dtype=p.DTYPE)
     array = np.random.rand(2, 5)
+    print(scale(test_lb, test_ub, array))
 
 def test_descale():
     test_lb = np.array((-1, -3), dtype = p.DTYPE)
@@ -88,3 +95,19 @@ def test_project():
 
     print(array)
     print(project(test_old_lb, test_old_ub, test_new_lb, test_new_ub, array))
+
+def test_scale_singledim():
+    array = np.random.rand(2)
+    test_lb = np.array((-1, -3), dtype = p.DTYPE)
+    test_ub = np.array((5, 8), dtype=p.DTYPE)
+
+    print(array)
+    print(scale(test_lb, test_ub, array))
+
+def test_descale():
+    test_lb = np.array((-1, -3), dtype = p.DTYPE)
+    test_ub = np.array((5, 8), dtype=p.DTYPE)
+    array=np.array((-0.5, 7))
+    print(descale(test_lb, test_ub, array))
+
+test_descale()

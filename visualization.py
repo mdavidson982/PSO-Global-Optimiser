@@ -4,6 +4,7 @@ import parameters as p
 import util as u
 import pso as pSO
 import testfuncts as tf
+import consts as c
 from matplotlib.figure import Figure
 from matplotlib.colors import LogNorm
 
@@ -11,18 +12,22 @@ FPS = 20 #How many frames per second the animation should run at
 FRAME_MS = 1000//FPS #How many milliseconds each frame appears on screen
 DPI = 100 #dots per inch that matplotlib should use for graphics
 
-def _translateCoords(lb: p.ADTYPE, ub: p.ADTYPE, xpos: p.ADTYPE, canvas_width: int, canvas_height: int):
+def _translateCoords(array: p.ADTYPE, lb: p.ADTYPE, ub: p.ADTYPE, canvas_width: int, canvas_height: int):
     """ Function which takes an array of values in a domain, and maps them to their appropriate posiiton on the canvas."""
-    if not u.check_dim(xpos, 2):
+    if not u.check_dim(array, 2):
         raise Exception("not a two by two")
 
     new_lb = np.array((0, 0), dtype=p.DTYPE)
     new_ub = np.array((canvas_width, canvas_height), dtype=p.DTYPE)
-    coords = u.project(lb, ub, new_lb, new_ub, xpos) #Coordinates on the tkinter canvas
+    coords = u.project(lb, ub, new_lb, new_ub, array) #Coordinates on the tkinter canvas
 
     # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
     # axis conforms to the coordinate system of tkinter.
-    coords[1] = np.ones((1, coords.shape[1]))*canvas_height - coords[1]
+    dims = array.ndim
+    if dims == 2:
+        coords[1] = np.ones((1, coords.shape[1]))*canvas_height - coords[1]
+    if dims == 1:
+        coords[1] = canvas_height - coords[1]
     return coords
 
 class Particle:
@@ -70,6 +75,7 @@ class Visualization:
     #Internal data about PSO
     pso: pSO.PSO
     particles: list
+    g_best: int
 
     #Various elements of the visualization
     root: tk.Tk
@@ -119,55 +125,45 @@ class Visualization:
         self.pso.initialize()
 
         # Map domain coordinates to the canvas
-        coords = _translateCoords(self.pso.lower_bound, self.pso.upper_bound, 
-                                  self.pso.pos_matrix, self.part_canv.winfo_width(), 
+        coords = _translateCoords(self.pso.pos_matrix, self.pso.lower_bound, 
+                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
                                   self.part_canv.winfo_height())
+        
+        # Vector of g_best coordinates translated to canvas coordinates
+        coordsgb = _translateCoords(self.pso.g_best[:-1], self.pso.lower_bound, 
+                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
+                                  self.part_canv.winfo_height())
+        gbx = coordsgb[c.XDIM]
+        gby = coordsgb[c.YDIM]
+        
+        self.g_best = self.part_canv.create_oval(gbx, gby, gbx, gby, outline="red", fill="red", width=15)
         
         # Based on particles 
         self.particles = []
         for i in range(coords.shape[1]):
-            canvas_x = coords[0][i]
-            canvas_y = coords[1][i]
-            space_x = np.round(self.pso.pos_matrix[0][i], 2)
-            space_y = np.round(self.pso.pos_matrix[1][i], 2)
+            canvas_x = coords[c.XDIM][i]
+            canvas_y = coords[c.YDIM][i]
+            space_x = np.round(self.pso.pos_matrix[c.XDIM][i], 2)
+            space_y = np.round(self.pso.pos_matrix[c.YDIM][i], 2)
             text = self.part_canv.create_text(canvas_x, canvas_y-10, text=f"({space_x}, {space_y})", fill="black", font=("Times New Roman", 10))
             dot = self.part_canv.create_oval(canvas_x, canvas_y, canvas_x, canvas_y, outline="blue", fill="blue", width = 10)
             particle = Particle(text, dot)
             self.particles.append(particle)
-
+        
         self.root.update()
         self.root.after(FRAME_MS, self.update_particles)
-
-    def make_contour(self):
-        x_bounds, y_bounds = u.dimension_to_xy_bounds(self.pso.lower_bound, self.pso.upper_bound)
-        x, y, z = tf.TF.generate_contour(self.pso.functionID, self.pso.optimum, self.pso.bias, self.pso.lower_bound, self.pso.upper_bound)
-        fig = Figure(figsize=(self.part_canv.winfo_width()/DPI, self.part_canv.winfo_height()/DPI), dpi=DPI) #Make a figure object
-
-        ax = fig.add_subplot(111)
-
-        levels = np.logspace(np.log10(np.min(z)),np.log10(np.max(z)),100)
-
-        contour = ax.contourf(x, y, z, cmap="viridis",  
-                              extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
-                              norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels
-                              ) #Make the contour
-        print(contour)
-        #fig.colorbar(contour)
-        
-        #The following removes whitespace
-        ax.axis('off')
-        fig.gca().set_axis_off()
-        fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
-        
-        fig.savefig(self.contour_img_path) #Save file for use as a background
-        self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
-        self.part_canv.create_image(0, 0, anchor=tk.NW, image=self.contour_img)
 
     def update_particles(self):
         
         shouldTerminate = self.pso.update()
-        coords = _translateCoords(self.pso.lower_bound, self.pso.upper_bound, self.pso.pos_matrix, self.part_canv.winfo_width(), self.part_canv.winfo_height())
-        
+        coords = _translateCoords(self.pso.pos_matrix, self.pso.lower_bound, 
+                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
+                                  self.part_canv.winfo_height())
+        # Vector of g_best coordinates translated to canvas coordinates
+        coordsgb = _translateCoords(self.pso.g_best[:-1], self.pso.lower_bound, 
+                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
+                                  self.part_canv.winfo_height())
+
         steps = self.update_time // FRAME_MS
         for i in range(len(self.particles)):
             canvas_x = coords[0][i]
@@ -193,11 +189,40 @@ class Visualization:
             self.root.after(FRAME_MS)
             self.root.update()
 
+        # Update the g_best
+        gbx = coordsgb[c.XDIM]
+        gby = coordsgb[c.YDIM]
+        self.part_canv.moveto(self.g_best, gbx, gby)
+        
         if not shouldTerminate:
             self.root.update()
             self.root.after(0, self.update_particles)
         else:
             print(f"The best position was {self.pso.g_best[:-1]} with a value of {self.pso.g_best[-1]}")
+
+    def make_contour(self):
+        x_bounds, y_bounds = u.dimension_to_xy_bounds(self.pso.lower_bound, self.pso.upper_bound)
+        x, y, z = tf.TF.generate_contour(self.pso.functionID, self.pso.optimum, self.pso.bias, self.pso.lower_bound, self.pso.upper_bound)
+        fig = Figure(figsize=(self.part_canv.winfo_width()/DPI, self.part_canv.winfo_height()/DPI), dpi=DPI) #Make a figure object
+
+        ax = fig.add_subplot(111)
+
+        levels = np.logspace(np.log10(np.min(z)),np.log10(np.max(z)),100)
+
+        contour = ax.contourf(x, y, z, cmap="viridis",  
+                              extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
+                              norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels
+                              ) #Make the contour
+        #fig.colorbar(contour)
+        
+        #The following removes whitespace
+        ax.axis('off')
+        fig.gca().set_axis_off()
+        fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        
+        fig.savefig(self.contour_img_path) #Save file for use as a background
+        self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
+        self.part_canv.create_image(0, 0, anchor=tk.NW, image=self.contour_img)
 
 
 def TestVisualizer():
@@ -206,7 +231,7 @@ def TestVisualizer():
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
     optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
 
-    vis = Visualization(root=root, pso=pso, update_time = 50)
+    vis = Visualization(root=root, pso=pso, update_time = 500)
     
     vis.start()
     root.mainloop()
