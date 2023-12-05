@@ -6,6 +6,7 @@ import testfuncts as tf
 import time
 
 def validate_learn_params(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
+    """Determines if learning params are correct"""
     return w < 1 and w > 0.5*(c1+c2)
 
 #initialization variables
@@ -24,7 +25,33 @@ def validate_learn_params(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
 
 
 class PSO:
-    num_part: int
+    """
+    Controls the operation of the PSO algorithm.  
+
+    num_part:       number of particles the instance will use
+    num_dim:        dimensions of the problem to be solved
+    alpha:          velocity constriction parameter
+    upper_bound:    upper bounds of the domain
+    lower_bound:    lower bounds of the domain
+    max_iterations: maximum number of iterations the instance can run through
+    w:              momentum parameter (see docs for more)
+    c1:             cognitive parameter (see docs for more)
+    c2:             social parameter (see docs for more)
+    tolerance:      part of second termination criteria (see docs)
+    mv_iteration:   part of second termination criteria (see docs)
+    function:       the function to be optimized
+    pos_matrix:     matrix recording the position of the particles
+    vel_matrix:     matrix recording the velocity of the particles
+    p_best:         matrix recording the personal best of the particles
+    g_best:         vector recording the global best of the instance
+    v_max:          vector controlling the maximum velocity of particles
+    old_g_best:     matrix recording the last [mv_iteration] g_bests for use in second termination criteria
+    iterations:     current iteration of the instance
+    optimum:        shifted optimum of the function
+    bias:           bias of the function
+    functionID:     which function to use
+    """
+    num_part: int 
     num_dim: int
     alpha: p.DTYPE
     upper_bound: p.ADTYPE
@@ -81,6 +108,9 @@ class PSO:
         self.iterations = 0
 
     def update(self) -> bool:
+        """
+        Performs an iteration of the PSO algorithm.  Returns whether the instance should terminate.
+        """
         self.vel_matrix = up.update_velocity(self.vel_matrix, self.pos_matrix, self.g_best, self.p_best, self.w, self.c1, self.c2)
         self.vel_matrix = up.verify_bounds(self.v_max, -self.v_max, self.vel_matrix)
         self.pos_matrix = up.update_position(self.pos_matrix, self.vel_matrix)
@@ -104,36 +134,28 @@ class PSO:
         return self.should_terminate()
 
     def should_terminate(self) -> bool:
+        """Helper function which determines if the instance should terminate"""
         return self.iterations >= self.max_iterations or self.second_termination()
     
     def second_termination(self) -> bool:
+        """Second termination criteria, specified in document"""
         return (abs(self.old_g_best[0]-self.old_g_best[-1])/(abs(self.old_g_best[-1]) + self.tolerance)) < self.tolerance
 
 # Non-graphical runner
 class PSORunner:
+    "Runs an instance of the PSO algorithm."
     pso: PSO
 
     def __init__(self, pso: PSO):
         self.pso = pso
 
-    # Run PSO manually.
     def run_PSO(self):
+        "Runs PSO"
         start = time.time()
         self.pso.initialize()
         shouldTerminate = False
         while not shouldTerminate:
             shouldTerminate = self.pso.update()
-
-        print("The global best was ", self.pso.g_best[:-1])
-        print("The best value was ", self.pso.g_best[-1])
-        print(f"We had {self.pso.iterations} iterations")
-        print(f"The function took {time.time()-start} seconds to run")
-
-
-
-        
-
-
 
 """
 pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
@@ -143,13 +165,14 @@ pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPP
 
 def test_PSO():
 
-
     pso = PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
         max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
         optimum=p.OPTIMUM, bias=p.BIAS, functionID=p.FUNCT)
 
     runner = PSORunner(pso)
     runner.run_PSO()
+
+    
 
 test_PSO()
 

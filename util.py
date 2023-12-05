@@ -1,5 +1,8 @@
 import parameters as p
 import numpy as np
+import consts as c
+import os
+import time
 
 def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
@@ -32,7 +35,21 @@ def dimension_to_xy_bounds(lb: p.ADTYPE, ub: p.ADTYPE) -> (p.ADTYPE, p.ADTYPE):
     """
     if not check_dim(lb, 2) or not check_dim(ub, 2):
         raise Exception("Improper dimensions")
-    return np.array(lb[0], ub[0]), np.array[lb[1], ub[1]]
+    
+    return np.array((lb[c.XDIM], ub[c.XDIM])), np.array((lb[c.YDIM], ub[c.YDIM]))
+
+def clear_temp() -> None:
+    files = os.listdir(c.TEMP_PATH)
+
+    for file_name in files:
+        file_path = os.path.join(c.TEMP_PATH, file_name)
+        try:
+            os.remove(file_path)
+        except Exception:
+            print(f"could not delete file {file_name}")
+
+def make_tempfile_path() -> str:
+    return os.path.join(c.TEMP_PATH, f"TEMP{time.time_ns()}")
 
 def test_scale():
     test_lb = np.array((-1, -3), dtype = p.DTYPE)

@@ -20,10 +20,10 @@ TOLERANCE: np.float64 = 10**-6
 FUNCT = "rosenbrock"
 
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
-UPPER_BOUND = np.array([20, 20], dtype=DTYPE)
-LOWER_BOUND = np.array([-20, -20], dtype=DTYPE)
-OPTIMUM = np.array([10,-10], dtype=DTYPE)
-BIAS: DTYPE = 450
+UPPER_BOUND = np.array([1000, 1000], dtype=DTYPE)
+LOWER_BOUND = np.array([-1000, -1000], dtype=DTYPE)
+OPTIMUM = np.array([0, 0], dtype=DTYPE)
+BIAS: DTYPE = 45
 
 #Velocity restrictor [0-1].  
 ALPHA: np.float64 = 0.1
