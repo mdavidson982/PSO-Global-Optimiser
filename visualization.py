@@ -7,28 +7,16 @@ import testfuncts as tf
 import consts as c
 from matplotlib.figure import Figure
 from matplotlib.colors import LogNorm
+from matplotlib.transforms import Bbox
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.pyplot import subplots
 
 FPS = 20 #How many frames per second the animation should run at
 FRAME_MS = 1000//FPS #How many milliseconds each frame appears on screen
 DPI = 100 #dots per inch that matplotlib should use for graphics
 
-def _translateCoords(array: p.ADTYPE, lb: p.ADTYPE, ub: p.ADTYPE, canvas_width: int, canvas_height: int):
-    """ Function which takes an array of values in a domain, and maps them to their appropriate posiiton on the canvas."""
-    if not u.check_dim(array, 2):
-        raise Exception("not a two by two")
-
-    new_lb = np.array((0, 0), dtype=p.DTYPE)
-    new_ub = np.array((canvas_width, canvas_height), dtype=p.DTYPE)
-    coords = u.project(lb, ub, new_lb, new_ub, array) #Coordinates on the tkinter canvas
-
-    # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
-    # axis conforms to the coordinate system of tkinter.
-    dims = array.ndim
-    if dims == 2:
-        coords[1] = np.ones((1, coords.shape[1]))*canvas_height - coords[1]
-    if dims == 1:
-        coords[1] = canvas_height - coords[1]
-    return coords
+CONTOUR_DIM = Bbox(np.array([(0.05, 0.05), (0.95, 0.95)]))
+COLOR_LEVELS = 100
 
 class Particle:
     """
@@ -63,6 +51,7 @@ class Visualization:
     display:  frame which visually displays the PSO algorithm
     part_canv:  Particle canvas.  Shows the contour plot and PSO particles.
     contour_img:  Contour plot of the function to be optimized.  Used as a background for part_canv
+    contour_loc:  Location of the contour plot within the figure.  Used to ensure particles stay within the contour plot.
     
     update_time:  How many milliseconds each iteration of PSO should last.  Default is 1 second.
     contour_img_path:  Path to temporary image of the contour diagram.
@@ -83,6 +72,7 @@ class Visualization:
     display: tk.Frame
     part_canv: tk.Canvas
     contour_img: tk.PhotoImage
+    contour_loc: Bbox
 
     #Misc data
     update_time: int
@@ -112,11 +102,11 @@ class Visualization:
         self.display.pack(pady=10)
         self.root.update_idletasks()
 
-        # Particle canvas setup.
-        self.part_canv = tk.Canvas(self.display, width = self.display.winfo_width(), height=self.display.winfo_height())
-        self.part_canv.pack(fill=tk.BOTH, expand=True)
-        self.root.update_idletasks()
         self.make_contour() # Generate contour plot, and set as background of particle canvas
+        self.make_gbest_iterations()
+        #root.destroy()
+
+        # Num_iterations vs. g_best
 
         self.root.update_idletasks()
 
@@ -125,14 +115,11 @@ class Visualization:
         self.pso.initialize()
 
         # Map domain coordinates to the canvas
-        coords = _translateCoords(self.pso.pos_matrix, self.pso.lower_bound, 
-                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
-                                  self.part_canv.winfo_height())
+        coords = self._translate_coords(self.pso.pos_matrix)
         
         # Vector of g_best coordinates translated to canvas coordinates
-        coordsgb = _translateCoords(self.pso.g_best[:-1], self.pso.lower_bound, 
-                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
-                                  self.part_canv.winfo_height())
+        coordsgb = self._translate_coords(self.pso.g_best[:-1])
+
         gbx = coordsgb[c.XDIM]
         gby = coordsgb[c.YDIM]
         
@@ -154,15 +141,13 @@ class Visualization:
         self.root.after(FRAME_MS, self.update_particles)
 
     def update_particles(self):
-        
         shouldTerminate = self.pso.update()
-        coords = _translateCoords(self.pso.pos_matrix, self.pso.lower_bound, 
-                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
-                                  self.part_canv.winfo_height())
+
+        # Map domain coordinates to the canvas
+        coords = self._translate_coords(self.pso.pos_matrix)
+        
         # Vector of g_best coordinates translated to canvas coordinates
-        coordsgb = _translateCoords(self.pso.g_best[:-1], self.pso.lower_bound, 
-                                  self.pso.upper_bound, self.part_canv.winfo_width(), 
-                                  self.part_canv.winfo_height())
+        coordsgb = self._translate_coords(self.pso.g_best[:-1])
 
         steps = self.update_time // FRAME_MS
         for i in range(len(self.particles)):
@@ -200,29 +185,72 @@ class Visualization:
         else:
             print(f"The best position was {self.pso.g_best[:-1]} with a value of {self.pso.g_best[-1]}")
 
+    def make_gbest_iterations(self):
+        self.root.update()
+        self.root.update_idletasks()
+        fig, ax = subplots()
+        ax.plot([1, 2, 3, 4], [1, 2, 3, 4])
+        canvas = FigureCanvasTkAgg(fig, master=self.display)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=1, column=0)
+        self.root.update()
+        self.root.update_idletasks()
+
     def make_contour(self):
+        # Particle canvas setup.
+
+        self.part_canv = tk.Canvas(self.display, width = self.display.winfo_width(), height=self.display.winfo_height())
+        self.part_canv.grid(row=0, column=0)
+
+        self.root.update_idletasks()
         x_bounds, y_bounds = u.dimension_to_xy_bounds(self.pso.lower_bound, self.pso.upper_bound)
-        x, y, z = tf.TF.generate_contour(self.pso.functionID, self.pso.optimum, self.pso.bias, self.pso.lower_bound, self.pso.upper_bound)
+        
+        x, y, z = tf.TF.generate_contour(self.pso.function, self.pso.lower_bound, self.pso.upper_bound)
         fig = Figure(figsize=(self.part_canv.winfo_width()/DPI, self.part_canv.winfo_height()/DPI), dpi=DPI) #Make a figure object
 
+        # Make the figure take up as much space as possible
         ax = fig.add_subplot(111)
-
-        levels = np.logspace(np.log10(np.min(z)),np.log10(np.max(z)),100)
-
-        contour = ax.contourf(x, y, z, cmap="viridis",  
-                              extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
-                              norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels
-                              ) #Make the contour
-        #fig.colorbar(contour)
         
-        #The following removes whitespace
-        ax.axis('off')
-        fig.gca().set_axis_off()
-        fig.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        ax.set_position(CONTOUR_DIM)
+        self.contour_loc = ax.get_position() # Store this for mapping purposes later
+
+        # Apply a logarithmic scale to the colors so that the minima takes more colors
+        levels = np.logspace(np.log10(np.min(z)),np.log10(np.max(z)),COLOR_LEVELS)
+
+        # Make the contour
+        ax.contourf(x, y, z, cmap="viridis",  
+                    extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
+                    norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels) 
         
         fig.savefig(self.contour_img_path) #Save file for use as a background
         self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
         self.part_canv.create_image(0, 0, anchor=tk.NW, image=self.contour_img)
+        
+        self.root.update()
+        self.root.update_idletasks()
+
+    def _translate_coords(self, array: p.ADTYPE):
+        """ Function which takes an array of values in a domain, and maps them to their appropriate posiiton on the canvas."""
+        if not u.check_dim(array, 2):
+            raise Exception("not a two by two")
+        
+        cwidth = self.part_canv.winfo_width()
+        cheight = self.part_canv.winfo_height()
+
+        # The actual contour plot only takes up xmin - xmax and ymin-max of the figure.  Therefore, we multiply cwidth and cheight
+        # Respectively so that all particles show up on the contour plot.
+        new_lb = np.array((cwidth*self.contour_loc.xmin, cheight*self.contour_loc.ymin), dtype=p.DTYPE)
+        new_ub = np.array((cwidth*self.contour_loc.xmax, cheight*self.contour_loc.ymax), dtype=p.DTYPE)
+        coords = u.project(self.pso.lower_bound, self.pso.upper_bound, new_lb, new_ub, array) #Coordinates on the tkinter canvas
+
+        # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
+        # axis conforms to the coordinate system of tkinter.
+        dims = array.ndim
+        if dims == 2:
+            coords[1] = np.ones((1, coords.shape[1]))*cheight - coords[1]
+        if dims == 1:
+            coords[1] = cheight - coords[1]
+        return coords
 
 
 def TestVisualizer():

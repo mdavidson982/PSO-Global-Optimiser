@@ -109,5 +109,3 @@ def test_descale():
     test_ub = np.array((5, 8), dtype=p.DTYPE)
     array=np.array((-0.5, 7))
     print(descale(test_lb, test_ub, array))
-
-test_descale()

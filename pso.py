@@ -93,6 +93,7 @@ class PSO:
         self.bias = bias
         self.functionID = functionID
         self.function = tf.TF.generate_function(functionID=functionID, optimum=optimum, bias=bias)
+        self.g_best = None
 
         if not validate_learn_params(w, c1, c2):
             raise Exception("Bad learning parameters")
@@ -102,6 +103,7 @@ class PSO:
         self.pos_matrix, self.vel_matrix, self.p_best, self.g_best, self.v_max = ini.initializer(
             num_part=self.num_part, num_dim=self.num_dim, alpha=self.alpha, upper_bound=self.upper_bound,
             lower_bound=self.lower_bound, function = self.function)
+
         # Store the image of past g_bests for the second terminating condition.  Multiplies a ones array by the maximum possible value
         # So that comparison starts out always being true.
         self.old_g_best = np.finfo(p.DTYPE).max*np.ones(self.mv_iteration, dtype=p.DTYPE)
@@ -151,11 +153,17 @@ class PSORunner:
 
     def run_PSO(self):
         "Runs PSO"
-        start = time.time()
         self.pso.initialize()
         shouldTerminate = False
         while not shouldTerminate:
             shouldTerminate = self.pso.update()
+
+    def mpso(self):
+        start = time.time()
+        for i in range(30):
+            self.run_PSO()
+        print(f"it took {time.time() - start} seconds to run")
+
 
 """
 pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
@@ -170,11 +178,11 @@ def test_PSO():
         optimum=p.OPTIMUM, bias=p.BIAS, functionID=p.FUNCT)
 
     runner = PSORunner(pso)
-    runner.run_PSO()
+    runner.mpso()
 
     
 
-test_PSO()
+#test_PSO()
 
 
 
