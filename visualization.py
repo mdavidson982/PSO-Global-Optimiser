@@ -236,7 +236,7 @@ class Visualization:
         self.g_best_chart.plot(self.g_best_history[c.XDIM], self.g_best_history[c.YDIM])
 
         # Add a title
-        self.g_best_chart.set_title('Iterations vs g_best value')
+        self.g_best_chart.set_title('Iterations vs g_best value (logarithmic)')
 
         # Add axis labels
         self.g_best_chart.set_xlabel('Iterations')
