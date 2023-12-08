@@ -128,7 +128,7 @@ class Visualization:
         """Initializes PSO, and begins the visualization"""
         self.pso.initialize()
 
-        self.g_best_history = np.empty((2, 0))
+        self.g_best_history = np.empty((2, 0), dtype=p.DTYPE)
         self.update_gbest_iterations()
 
         # Map domain coordinates to the canvas
@@ -232,7 +232,6 @@ class Visualization:
         self.root.update_idletasks()
         
         self.g_best_history = np.hstack((self.g_best_history, np.array([self.pso.iterations, self.pso.g_best[-1]]).reshape(-1, 1)))
-        print(self.g_best_history)
         self.g_best_chart.clear()
         self.g_best_chart.plot(self.g_best_history[c.XDIM], self.g_best_history[c.YDIM])
 
@@ -241,7 +240,8 @@ class Visualization:
 
         # Add axis labels
         self.g_best_chart.set_xlabel('Iterations')
-        self.g_best_chart.set_ylabel('g_best')
+        self.g_best_chart.set_ylabel('g_best: logarithmic scale')
+        self.g_best_chart.set_yscale("log")
 
         self.g_best_canv.draw_idle()
         self.root.update()
@@ -309,7 +309,7 @@ def TestVisualizer():
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
     optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
 
-    vis = Visualization(root=root, pso=pso, update_time = 1000)
+    vis = Visualization(root=root, pso=pso, update_time = 2000)
     
     vis.start()
     root.mainloop()

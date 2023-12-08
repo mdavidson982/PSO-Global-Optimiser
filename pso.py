@@ -157,6 +157,7 @@ class PSORunner:
         shouldTerminate = False
         while not shouldTerminate:
             shouldTerminate = self.pso.update()
+        print(self.pso.g_best)
 
     def mpso(self):
         start = time.time()
@@ -182,7 +183,7 @@ def test_PSO():
 
     
 
-#test_PSO()
+test_PSO()
 
 
 
