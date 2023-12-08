@@ -26,13 +26,13 @@ OPTIMUM = np.array([0, 0], dtype=DTYPE)
 BIAS: DTYPE = 45
 
 #Velocity restrictor [0-1].  
-ALPHA: np.float64 = 0.2
+ALPHA: np.float64 = 0.4
 
 #Learning parameters:
 #Weight part of inertia compoennet
-W: np.float64 = 0.9 #velocity, Randomized from 0 - 1
+W: np.float64 = 0.5 #velocity, Randomized from 0 - 1
 
 #Acceleration coefficients
-C1: np.float64 = 0.5 #Cognitive parameter.  Random number from [0 - 2), fixed throughout the function
-C2: np.float64 = 0.5 #Social parameter.  Random number from [0 - 2), fixed throughout the function
+C1: np.float64 = 0.4 #Cognitive parameter.  Random number from [0 - 2), fixed throughout the function
+C2: np.float64 = 0.4 #Social parameter.  Random number from [0 - 2), fixed throughout the function
 

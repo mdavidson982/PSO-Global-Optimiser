@@ -37,6 +37,7 @@ class Particle:
         self.text = text
         self.dot = dot
 
+
 class Visualization:
     """
     Runs a visual representation of test functions.
@@ -74,6 +75,10 @@ class Visualization:
     contour_img: tk.PhotoImage
     contour_loc: Bbox
 
+    g_best_fig: FigureCanvasTkAgg
+    g_best_chart: Axes
+
+
     #Misc data
     update_time: int
     contour_img_path: str
@@ -82,7 +87,8 @@ class Visualization:
         u.clear_temp() #Clear temporary png files
         self.update_time = update_time - update_time % FRAME_MS # Ensures that an iteration of PSO can evenly be divided into frames
         self.root = root
-        self.pso = pso
+        self.root.bind('<Escape>', self.close_window)
+        self.pso = pso  
         self.contour_img_path = u.make_tempfile_path() # Path to the contour image that will be saved later.
 
         self.root.title("Visualization")
@@ -100,6 +106,7 @@ class Visualization:
         self.root.update_idletasks()
         self.display = tk.Frame(self.main_frame, width=int(self.width*.8), height = (int(self.height*.75)), highlightbackground="black", highlightthickness=5)
         self.display.pack(pady=10)
+
         self.root.update_idletasks()
 
         self.make_contour() # Generate contour plot, and set as background of particle canvas
@@ -107,8 +114,12 @@ class Visualization:
         #root.destroy()
 
         # Num_iterations vs. g_best
-
+        
         self.root.update_idletasks()
+        self.root.update()
+
+    def close_window(self, event):
+        self.root.destroy()
 
     def start(self):
         """Initializes PSO, and begins the visualization"""
@@ -186,20 +197,18 @@ class Visualization:
             print(f"The best position was {self.pso.g_best[:-1]} with a value of {self.pso.g_best[-1]}")
 
     def make_gbest_iterations(self):
-        self.root.update()
         self.root.update_idletasks()
-        fig, ax = subplots()
+        self.g_best_fig, self.g_best_chart = subplots()
         ax.plot([1, 2, 3, 4], [1, 2, 3, 4])
         canvas = FigureCanvasTkAgg(fig, master=self.display)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=1, column=0)
-        self.root.update()
+        canvas.get_tk_widget().grid(row=0, column=1)
         self.root.update_idletasks()
 
     def make_contour(self):
         # Particle canvas setup.
-
-        self.part_canv = tk.Canvas(self.display, width = self.display.winfo_width(), height=self.display.winfo_height())
+        self.root.update_idletasks()
+        self.part_canv = tk.Canvas(self.display, width=self.display.winfo_width()*0.8, height=self.display.winfo_height()*0.8)
         self.part_canv.grid(row=0, column=0)
 
         self.root.update_idletasks()
@@ -226,7 +235,6 @@ class Visualization:
         self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
         self.part_canv.create_image(0, 0, anchor=tk.NW, image=self.contour_img)
         
-        self.root.update()
         self.root.update_idletasks()
 
     def _translate_coords(self, array: p.ADTYPE):
@@ -245,11 +253,11 @@ class Visualization:
 
         # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
         # axis conforms to the coordinate system of tkinter.
-        dims = array.ndim
-        if dims == 2:
-            coords[1] = np.ones((1, coords.shape[1]))*cheight - coords[1]
-        if dims == 1:
-            coords[1] = cheight - coords[1]
+        if array.ndim == 2:
+            coords[c.YDIM] = np.ones((1, coords.shape[1]))*(new_ub[c.YDIM]) + new_lb[c.YDIM] - coords[c.YDIM]
+        if array.ndim == 1:
+            coords[c.YDIM] = new_ub[c.YDIM] + new_lb[c.YDIM] - coords[c.YDIM]
+        
         return coords
 
 
@@ -259,7 +267,7 @@ def TestVisualizer():
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
     optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
 
-    vis = Visualization(root=root, pso=pso, update_time = 500)
+    vis = Visualization(root=root, pso=pso, update_time = 1000)
     
     vis.start()
     root.mainloop()
