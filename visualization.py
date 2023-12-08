@@ -10,6 +10,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.transforms import Bbox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.pyplot import subplots
+from matplotlib.axes import Axes
 
 FPS = 20 #How many frames per second the animation should run at
 FRAME_MS = 1000//FPS #How many milliseconds each frame appears on screen
@@ -65,7 +66,7 @@ class Visualization:
     #Internal data about PSO
     pso: pSO.PSO
     particles: list
-    g_best: int
+    g_best_part: int
 
     #Various elements of the visualization
     root: tk.Tk
@@ -77,7 +78,8 @@ class Visualization:
 
     g_best_fig: FigureCanvasTkAgg
     g_best_chart: Axes
-
+    g_best_history: p.ADTYPE
+    g_best_line: any
 
     #Misc data
     update_time: int
@@ -134,7 +136,7 @@ class Visualization:
         gbx = coordsgb[c.XDIM]
         gby = coordsgb[c.YDIM]
         
-        self.g_best = self.part_canv.create_oval(gbx, gby, gbx, gby, outline="red", fill="red", width=15)
+        self.g_best_part = self.part_canv.create_oval(gbx, gby, gbx, gby, outline="red", fill="red", width=15)
         
         # Based on particles 
         self.particles = []
@@ -149,16 +151,13 @@ class Visualization:
             self.particles.append(particle)
         
         self.root.update()
-        self.root.after(FRAME_MS, self.update_particles)
+        self.root.after(FRAME_MS, self.new_iteration)
 
-    def update_particles(self):
+    def new_iteration(self):
         shouldTerminate = self.pso.update()
 
         # Map domain coordinates to the canvas
         coords = self._translate_coords(self.pso.pos_matrix)
-        
-        # Vector of g_best coordinates translated to canvas coordinates
-        coordsgb = self._translate_coords(self.pso.g_best[:-1])
 
         steps = self.update_time // FRAME_MS
         for i in range(len(self.particles)):
@@ -185,24 +184,38 @@ class Visualization:
             self.root.after(FRAME_MS)
             self.root.update()
 
+        # Vector of g_best coordinates translated to canvas coordinates
+        coordsgb = self._translate_coords(self.pso.g_best[:-1])
+
         # Update the g_best
         gbx = coordsgb[c.XDIM]
         gby = coordsgb[c.YDIM]
-        self.part_canv.moveto(self.g_best, gbx, gby)
+        self.part_canv.moveto(self.g_best_part, gbx, gby)
         
         if not shouldTerminate:
             self.root.update()
-            self.root.after(0, self.update_particles)
+            self.root.after(0, self.new_iteration)
         else:
             print(f"The best position was {self.pso.g_best[:-1]} with a value of {self.pso.g_best[-1]}")
+
+    def update_particles(self):
+        pass
 
     def make_gbest_iterations(self):
         self.root.update_idletasks()
         self.g_best_fig, self.g_best_chart = subplots()
-        ax.plot([1, 2, 3, 4], [1, 2, 3, 4])
-        canvas = FigureCanvasTkAgg(fig, master=self.display)
+        self.g_best_line = self.g_best_chart.plot([])
+        canvas = FigureCanvasTkAgg(self.g_best_fig, master=self.display)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0, column=1)
+        self.root.update_idletasks()
+
+    def update_gbest_iterations(self):
+        self.root.update_idletasks()
+        new_data = np.hstack((self.g_best_line, np.array([self.pso.iterations, self.pso.g_best[-1]]).reshape(-1, 1)))
+        self.g_best_line[0].set_xdata(new_data[0])
+        self.g_best_line[0].set_xdata(new_data[1])
+        self.g_best_fig.draw()
         self.root.update_idletasks()
 
     def make_contour(self):
