@@ -17,11 +17,11 @@ NO_MOVEMENT_TERMINATION: int = 20
 #Part of second termination criteria.  The tolerance which defines how small updates should be.
 TOLERANCE: np.float64 = 10**-6
 
-FUNCT = "rosenbrock"
+FUNCT = "sphere"
 
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
-UPPER_BOUND = np.array([100, 1000], dtype=DTYPE)
-LOWER_BOUND = np.array([-100, -1000], dtype=DTYPE)
+UPPER_BOUND = np.array([1000, 1000], dtype=DTYPE)
+LOWER_BOUND = np.array([-1000, -1000], dtype=DTYPE)
 OPTIMUM = np.array([0, 0], dtype=DTYPE)
 BIAS: DTYPE = 45
 

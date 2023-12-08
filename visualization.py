@@ -76,7 +76,8 @@ class Visualization:
     contour_img: tk.PhotoImage
     contour_loc: Bbox
 
-    g_best_fig: FigureCanvasTkAgg
+    g_best_canv: FigureCanvasTkAgg
+    g_best_fig: Figure
     g_best_chart: Axes
     g_best_history: p.ADTYPE
     g_best_line: any
@@ -127,6 +128,9 @@ class Visualization:
         """Initializes PSO, and begins the visualization"""
         self.pso.initialize()
 
+        self.g_best_history = np.empty((2, 0))
+        self.update_gbest_iterations()
+
         # Map domain coordinates to the canvas
         coords = self._translate_coords(self.pso.pos_matrix)
         
@@ -154,43 +158,14 @@ class Visualization:
         self.root.after(FRAME_MS, self.new_iteration)
 
     def new_iteration(self):
+        """
+        Updates PSO, and then the various visualization elements with new data.
+        """
         shouldTerminate = self.pso.update()
 
-        # Map domain coordinates to the canvas
-        coords = self._translate_coords(self.pso.pos_matrix)
-
-        steps = self.update_time // FRAME_MS
-        for i in range(len(self.particles)):
-            canvas_x = coords[0][i]
-            canvas_y = coords[1][i]
-            space_x = np.round(self.pso.pos_matrix[0][i], 2)
-            space_y = np.round(self.pso.pos_matrix[1][i], 2)
-            particle: Particle = self.particles[i]
-            
-            self.part_canv.itemconfig(particle.text, text=f"({space_x}, {space_y})", fill="black")
-            particle_coords = self.part_canv.coords(particle.dot)
-            
-            particle.delta_x = canvas_x - particle_coords[0]
-            particle.delta_y = canvas_y - particle_coords[1]
-
-        # Move the particles to the new location smoothly
-        for _ in range(steps):
-            for i in range(len(self.particles)):
-                particle = self.particles[i]
-
-                self.part_canv.move(particle.dot, particle.delta_x/steps, particle.delta_y/steps)
-                particle_coords = self.part_canv.coords(particle.dot)
-                self.part_canv.moveto(particle.text, particle_coords[0], particle_coords[1])
-            self.root.after(FRAME_MS)
-            self.root.update()
-
-        # Vector of g_best coordinates translated to canvas coordinates
-        coordsgb = self._translate_coords(self.pso.g_best[:-1])
-
-        # Update the g_best
-        gbx = coordsgb[c.XDIM]
-        gby = coordsgb[c.YDIM]
-        self.part_canv.moveto(self.g_best_part, gbx, gby)
+        self.update_gbest_iterations()
+        self.update_particles()
+        self.update_gbest_particle()
         
         if not shouldTerminate:
             self.root.update()
@@ -199,23 +174,77 @@ class Visualization:
             print(f"The best position was {self.pso.g_best[:-1]} with a value of {self.pso.g_best[-1]}")
 
     def update_particles(self):
-        pass
+        """
+        Move the particles to their new coordinates.
+        """
+        # Map domain coordinates to the canvas
+        coords = self._translate_coords(self.pso.pos_matrix)
+
+        # Update the data fields of particles
+        for i in range(len(self.particles)):
+            particle: Particle = self.particles[i]
+            particle_coords = self.part_canv.coords(particle.dot)
+
+            canvas_x = coords[0][i] # Used for moving on the canvas
+            canvas_y = coords[1][i]
+
+            # Find out how much each particle should move
+            particle.delta_x = canvas_x - particle_coords[0]
+            particle.delta_y = canvas_y - particle_coords[1]
+
+            # Update text showing up on coordinates
+            space_x = np.round(self.pso.pos_matrix[0][i], 2) # Used to display text
+            space_y = np.round(self.pso.pos_matrix[1][i], 2)
+            self.part_canv.itemconfig(particle.text, text=f"({space_x}, {space_y})", fill="black")
+
+        # Move the particles to the new location smoothly
+        steps = self.update_time // FRAME_MS
+        for _ in range(steps):
+            for i in range(len(self.particles)):
+                # Move a fraction of the total distance
+                particle = self.particles[i]
+                self.part_canv.move(particle.dot, particle.delta_x/steps, particle.delta_y/steps)
+                # Move text to where do tis
+                particle_coords = self.part_canv.coords(particle.dot)
+                self.part_canv.moveto(particle.text, particle_coords[0], particle_coords[1])
+            self.root.after(FRAME_MS)
+            self.root.update()
+
+    def update_gbest_particle(self):
+        # Vector of g_best coordinates translated to canvas coordinates
+        coordsgb = self._translate_coords(self.pso.g_best[:-1])
+
+        # Update the g_best
+        gbx = coordsgb[c.XDIM]
+        gby = coordsgb[c.YDIM]
+        self.part_canv.moveto(self.g_best_part, gbx, gby)
 
     def make_gbest_iterations(self):
         self.root.update_idletasks()
         self.g_best_fig, self.g_best_chart = subplots()
-        self.g_best_line = self.g_best_chart.plot([])
-        canvas = FigureCanvasTkAgg(self.g_best_fig, master=self.display)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=0, column=1)
+
+        self.g_best_canv = FigureCanvasTkAgg(self.g_best_fig, master=self.display)
+        self.g_best_canv.draw()
+        self.g_best_canv.get_tk_widget().grid(row=0, column=1)
         self.root.update_idletasks()
 
     def update_gbest_iterations(self):
         self.root.update_idletasks()
-        new_data = np.hstack((self.g_best_line, np.array([self.pso.iterations, self.pso.g_best[-1]]).reshape(-1, 1)))
-        self.g_best_line[0].set_xdata(new_data[0])
-        self.g_best_line[0].set_xdata(new_data[1])
-        self.g_best_fig.draw()
+        
+        self.g_best_history = np.hstack((self.g_best_history, np.array([self.pso.iterations, self.pso.g_best[-1]]).reshape(-1, 1)))
+        print(self.g_best_history)
+        self.g_best_chart.clear()
+        self.g_best_chart.plot(self.g_best_history[c.XDIM], self.g_best_history[c.YDIM])
+
+        # Add a title
+        self.g_best_chart.set_title('Iterations vs g_best value')
+
+        # Add axis labels
+        self.g_best_chart.set_xlabel('Iterations')
+        self.g_best_chart.set_ylabel('g_best')
+
+        self.g_best_canv.draw_idle()
+        self.root.update()
         self.root.update_idletasks()
 
     def make_contour(self):
