@@ -2,9 +2,6 @@ import numpy as np
 from scipy import optimize
 import parameters as p
 
-def _testFunct(arr: p.ADTYPE):
-    return sum(arr**2)
-
 def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE, 
         alpha: p.DTYPE, tol: p.DTYPE, max_its: int, third_term_its: int, func):
     omega = alpha*(ub-lb) # Set restricted domain, as per step 2 on page 11 of manual
@@ -26,22 +23,42 @@ def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE,
 
     # Performs max_its iterations of a FBBF run (see page 11)
     for _ in range(max_its):
+
+        # A single FBBF run
         for i in l1:
-            def fn(x):
+
+            # Helper function which fixes all but the ith coordinate in place, and performs the objective function.
+            def _fn(x):
                 q[i] = x
                 return func(q)
             
-            optimize.brent(fn, brack=I[:, i])
+            # Since _fn will automatically set values for q, no need to assign any new variables.
+            optimize.brent(_fn, brack=I[:, i])
+
+        # Record the output of the function after a single FBBF run, for third termination criteria.
         old_bests = np.roll(old_bests, 1)
         old_bests[0] = func(q)
 
+        # Third termination criteria.  Exits out of the program early if proposed solutions are not
+        # Being improved within a certain tolerance criteria.
         if abs(old_bests[0]-old_bests[-1])/(abs(old_bests[0]) + tol) < tol:
             break
     return q
         
 
 def testCCD():
-    CCD(np.array((1, 2, 3)), np.array((-100, -100, -100)), np.array((100, 100, 100)), 
-        alpha = 0.2, tol=0.0001, max_its = 20, third_term_its = 6, func = _testFunct)
+    import testfuncts
+
+    dim = 30
+
+    ub = np.ones(dim)*100
+    lb = -1*ub
+    initial = np.random.rand(dim)*(ub - lb) + lb
+    optimum = np.zeros(dim)
+
+    test_func = testfuncts.TestFuncts.generate_function("rosenbrock", optimum, bias=0)
+
+    z = CCD(initial, lb, ub, alpha = 0.2, tol=0.0001, max_its = 20, third_term_its = 6, func = test_func)
+    print(z)
 
 testCCD()
