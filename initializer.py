@@ -72,7 +72,7 @@ def _v_initializer(num_dim: int, num_part: int, upper_bound: p.ADTYPE, lower_bou
     """Private function. Used in initializer. Randomly initializes the velocities of each particle
     """
     if alpha < 0 or alpha >= 1:
-        raise Exception("Whomp whomp")
+        raise Exception("Bad alpha parameter")
     
     v_max = alpha*(upper_bound - lower_bound)
 

@@ -141,7 +141,7 @@ class PSO:
     
     def second_termination(self) -> bool:
         """Second termination criteria, specified in document"""
-        return (abs(self.old_g_best[0]-self.old_g_best[-1])/(abs(self.old_g_best[-1]) + self.tolerance)) < self.tolerance
+        return (abs(self.old_g_best[0]-self.old_g_best[-1])/(abs(self.old_g_best[0]) + self.tolerance)) < self.tolerance
 
 # Non-graphical runner
 class PSORunner:
