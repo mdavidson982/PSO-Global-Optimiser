@@ -101,6 +101,13 @@ class TestFuncts:
             shaped_optimum = opt_reshape(x, optimum) 
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
         return schwefel
+    
+    """F8: Shifted Rotated Ackley's Function with Global Optimum on Bounds"""
+    def _shifted_rotated_ackley_gen(optimum: p.ADTYPE, bias: p.DTYPE):
+        def shifted_rotated_ackley_gen(x: p.ADTYPE) -> p.DTYPE:
+            z = (x - optimum) * _linearMatrix_gen(100)
+            d = x.shape[0]
+            -20*np.exp(-0.2*np.sqrt((1/d)*(np.sum(x**2))))-np.exp((1/d)*np.sum(np.cos(2*np.pi*z)))+20+np.e + bias
 
     
 TF = TestFuncts
