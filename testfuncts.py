@@ -97,10 +97,16 @@ class TestFuncts:
     
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def schwefel(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate the Rastrigin function value for a given input x
-            shaped_optimum = opt_reshape(x, optimum) 
+            # Calculate the Schwefel function value for a given input x
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
         return schwefel
+    
+    def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Shifted Schwefel function value for a given input x
+            z = x - optimum
+            return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
+        return shifted_schwefel
 
     
 TF = TestFuncts
