@@ -91,4 +91,11 @@ class TestFuncts:
             return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
         return rastrigin
     
+    def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def schwefel(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Rastrigin function value for a given input x
+            shaped_optimum = opt_reshape(x, optimum) 
+            return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
+
+    
 TF = TestFuncts
