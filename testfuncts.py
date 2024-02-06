@@ -19,9 +19,9 @@ def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     return optimum.reshape(new_shape)
 
 #Function used in Griewank test, placeholder values as Danh is big bozo
-def _linearMatrix_gen():
+def _linearMatrix_gen(conditionNum):
     # Generate a diagonal scaling matrix Bruh1
-    singular_values = np.linspace(1, 3, p.NUM_DIM)
+    singular_values = np.linspace(1, conditionNum, p.NUM_DIM)
     Bruh1 = np.diag(singular_values)
     # Generate a random orthogonal matrix Bruh3 using QR decomposition
     Bruh2 = np.random.randn(p.NUM_DIM, p.NUM_DIM)
@@ -69,9 +69,7 @@ class TestFuncts:
         def griewank(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rosenbrock function value for a given input x
             shaped_optimum = opt_reshape(x, optimum)
-            #z = (x - shaped_optimum)*_linearMatrix_gen()
-
-            z = (x - optimum)*_linearMatrix_gen()
+            z = (x - shaped_optimum)*_linearMatrix_gen(3)
             indexes = np.arange(z.shape[0])
             return np.sum(z[indexes]**2/4000) - (np.prod(np.cos(z[indexes]/np.sqrt(indexes)))) + 1 + bias
         return griewank
