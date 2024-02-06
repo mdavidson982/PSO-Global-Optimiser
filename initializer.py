@@ -4,7 +4,7 @@ import parameters as p
 
 
 def _Default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:
-    """Private Function. Really Shouldn't be used.
+    """Private Function. Really shouldn't be used.
     _Default is used as the default optimization function in initializer, this is really for debugging.
     Ideally, we will have other functions for more complex optimization problems that will take place of default"""
 
@@ -43,7 +43,7 @@ def initializer(num_part: int, num_dim: int, alpha: p.DTYPE,
     # Randomly assign velocities to each of the particles
     vel_matrix, v_max = _v_initializer(num_dim=num_dim, num_part=num_part, upper_bound=upper_bound, lower_bound=lower_bound, alpha = alpha)
 
-    # The distances row contians the distances for each particle's p_best.  It is used to keep track of
+    # The distances row contains the distances for each particle's p_best.  It is used to keep track of
     # Results so no recalculation is needed.  It is initialized at the max value, so that when the function
     # Is evaluated for the first time it properly updates
     distances_row = np.ones((1, num_part), dtype=p.DTYPE)
@@ -58,7 +58,7 @@ def initializer(num_part: int, num_dim: int, alpha: p.DTYPE,
     return pos_matrix, vel_matrix, p_best, g_best, v_max
 
 def _x_initializer(num_dim: int, num_part: int, upper_bound: np.ndarray[p.DTYPE], lower_bound: np.ndarray[p.DTYPE]) -> np.ndarray:
-    """Private function. Used in initializer. Randomly initializes the positions of each particle within the upper and lower bound limits of each dimmension"""
+    """Private function. Used in initializer. Randomly initializes the positions of each particle within the upper and lower bound limits of each dimension"""
     scalingfactor = upper_bound - lower_bound
 
     pos_matrix = np.random.rand(num_dim, num_part)
