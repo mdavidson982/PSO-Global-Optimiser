@@ -95,12 +95,14 @@ class TestFuncts:
             return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
         return rastrigin
     
+    # Schwefel's Problem F12
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def schwefel(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Schwefel function value for a given input x
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
         return schwefel
     
+    # Shifted Schwefel's Problem F2
     def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Shifted Schwefel function value for a given input x
