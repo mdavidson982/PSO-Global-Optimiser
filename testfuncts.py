@@ -100,6 +100,7 @@ class TestFuncts:
             # Calculate the Rastrigin function value for a given input x
             shaped_optimum = opt_reshape(x, optimum) 
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
+        return schwefel
 
     
 TF = TestFuncts
