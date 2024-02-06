@@ -95,10 +95,10 @@ class TestFuncts:
             return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
         return rastrigin
     
+    # Schwefel's Problem F12
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def schwefel(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate the Rastrigin function value for a given input x
-            shaped_optimum = opt_reshape(x, optimum) 
+            # Calculate the Schwefel function value for a given input x
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
         return schwefel
     
@@ -108,6 +108,15 @@ class TestFuncts:
             z = (x - optimum) * _linearMatrix_gen(100)
             d = x.shape[0]
             -20*np.exp(-0.2*np.sqrt((1/d)*(np.sum(x**2))))-np.exp((1/d)*np.sum(np.cos(2*np.pi*z)))+20+np.e + bias
+        return shifted_rotated_ackley_gen
+    
+    # Shifted Schwefel's Problem F2
+    def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Shifted Schwefel function value for a given input x
+            z = x - optimum
+            return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
+        return shifted_schwefel
 
     
 TF = TestFuncts
