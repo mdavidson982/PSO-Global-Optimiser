@@ -18,6 +18,8 @@ def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     new_shape = optimum.shape + ((1,) * (n1-n2))
     return optimum.reshape(new_shape)
 
+
+
 #Function used in Griewank test, placeholder values as Danh is big bozo
 def _linearMatrix_gen():
     # Generate a diagonal scaling matrix Bruh1
@@ -29,6 +31,8 @@ def _linearMatrix_gen():
     # Construct the rotation matrix Bruh4 = Bruh3^T * Bruh1 * Bruh2
     Bruh4 = np.dot(np.dot(Bruh3.T, Bruh1), Bruh3)
     return Bruh4
+
+
 
 class TestFuncts:
 
@@ -57,8 +61,9 @@ class TestFuncts:
     def _sphere_gen(optimum: p.ADTYPE, bias: p.DTYPE):
         #putting a test function here
         def sphere(x: p.ADTYPE) -> p.DTYPE:
-            shaped_optimum = opt_reshape(x, optimum)
-            z = x - shaped_optimum
+            #shaped_optimum = opt_reshape(x, optimum)
+            #z = x - shaped_optimum
+            z = x - optimum
             return np.sum((z) ** 2, axis=0) + bias
         return sphere
 
@@ -66,8 +71,11 @@ class TestFuncts:
     def _griewank_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def griewank(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rosenbrock function value for a given input x
-            shaped_optimum = opt_reshape(x, optimum)
-            z = (x - shaped_optimum)*_linearMatrix_gen()
+
+            #shaped_optimum = opt_reshape(x, optimum)
+            #z = (x - shaped_optimum)*_linearMatrix_gen()
+
+            z = x - optimum
             indexes = np.arange(z.shape[0])
             return np.sum(z[indexes]**2/4000) - (np.prod(np.cos(z[indexes]/np.sqrt(indexes)))) + 1 + bias
         return griewank
@@ -76,8 +84,10 @@ class TestFuncts:
     def _rosenbrock_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def rosenbrock(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rosenbrock function value for a given input x
-            shaped_optimum = opt_reshape(x, optimum)
-            z = x - shaped_optimum + 1
+            #shaped_optimum = opt_reshape(x, optimum)
+            #z = x - shaped_optimum + 1
+
+            z = x - optimum + 1
             indexes = np.arange(z.shape[0] - 1)
             return np.sum(100*(z[indexes]**2 - z[indexes+1])**2 + (z[indexes] - 1)**2, axis=0) + bias
         
