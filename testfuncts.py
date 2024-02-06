@@ -11,6 +11,8 @@ GRIEWANKSTRING = "griewank"
 GRIEWANKID = 7
 RASTRIGINID = 9
 RASTRIGINSTRING = "rastrigin"
+ROTATEDRASTRIGINID = 10
+RASTRIGINSTRING = "rotated rastrigin"
 
 def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     n1 = len(x.shape)
@@ -94,6 +96,14 @@ class TestFuncts:
             z = x - optimum
             return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
         return rastrigin
+
+    #Rotated Rastrigin
+    def _rotatedRastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def rotatedRastrigin(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Rastrigin function value for a given input x
+            z = (x - optimum) * _linearMatrix_gen(2)
+            return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
+        return rotatedRastrigin
     
     # Schwefel's Problem F12
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
