@@ -109,6 +109,22 @@ class TestFuncts:
             z = x - optimum
             return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
         return shifted_schwefel
+    
+    # Schwefel's Problem 2.6 with Global Optimum on Bounds
+    def _schwefel_gob_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def schwefel_gob(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate Schwefel's problem 2.6 function value for a given input x
+            #This is found on chatgpt, is supposed to work for an n dimensional matrix
+            #n should represent number of rows. Unsure if ln 122 (for i in range) line
+            #is necessary but felt like it made sense 
+            n = len(x)
+            result = 0
+
+            for i in range(n):
+                term_i = max(abs(x[i] - 500), 0) + np.sin(np.sqrt(abs(x[i] - 500)))
+                result += term_i
+            return result
+        return schwefel_gob
 
     
 TF = TestFuncts
