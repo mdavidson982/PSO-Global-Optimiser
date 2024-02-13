@@ -11,6 +11,8 @@ GRIEWANKSTRING = "griewank"
 GRIEWANKID = 7
 RASTRIGINID = 9
 RASTRIGINSTRING = "rastrigin"
+ROTATEDRASTRIGINID = 10
+RASTRIGINSTRING = "rotated rastrigin"
 
 def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     n1 = len(x.shape)
@@ -54,6 +56,7 @@ class TestFuncts:
         input = np.array((X, Y))
         return X, Y, function(input)
 
+    #F1: Shifted Sphere Function
     def _sphere_gen(optimum: p.ADTYPE, bias: p.DTYPE):
         #putting a test function here
         def sphere(x: p.ADTYPE) -> p.DTYPE:
@@ -63,18 +66,23 @@ class TestFuncts:
             z = x - optimum
             return np.sum((z) ** 2, axis=0) + bias
         return sphere
-
-    #Griewank lol, NEEDS REVIEW 
-    def _griewank_gen(optimum:p.ADTYPE, bias: p.DTYPE):
-        def griewank(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate the Rosenbrock function value for a given input x
-            shaped_optimum = opt_reshape(x, optimum)
-            z = (x - shaped_optimum)*_linearMatrix_gen(3)
-            indexes = np.arange(z.shape[0])
-            return np.sum(z[indexes]**2/4000) - (np.prod(np.cos(z[indexes]/np.sqrt(indexes)))) + 1 + bias
-        return griewank
     
-    #Rosenbrock
+    #F2: Shifted Schwefel’s Problem 1.2
+    def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Shifted Schwefel function value for a given input x
+            z = x - optimum
+            return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
+        return shifted_schwefel
+    
+    #F4: F4: Shifted Schwefel’s Problem 1.2 with Noise in Fitness
+    def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def schwefel(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Schwefel function value for a given input x
+            return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
+        return schwefel
+    
+    #F6: Shifted Rosenbrock’s Function
     def _rosenbrock_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def rosenbrock(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rosenbrock function value for a given input x
@@ -87,21 +95,45 @@ class TestFuncts:
         
         return rosenbrock
 
-    #Rastrigin
+    #F7: Shifted Rotated Griewank’s Function without Bounds
+    def _griewank_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def griewank(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Rosenbrock function value for a given input x
+            shaped_optimum = opt_reshape(x, optimum)
+            z = (x - shaped_optimum)*_linearMatrix_gen(3)
+            indexes = np.arange(z.shape[0])
+            return np.sum(z[indexes]**2/4000) - (np.prod(np.cos(z[indexes]/np.sqrt(indexes)))) + 1 + bias
+        return griewank
+    
+    #F8: Shifted Rotated Ackley's Function with Global Optimum on Bounds"""
+    def _shifted_rotated_ackley_gen(optimum: p.ADTYPE, bias: p.DTYPE):
+        def shifted_rotated_ackley_gen(x: p.ADTYPE) -> p.DTYPE:
+            z = (x - optimum) * _linearMatrix_gen(100)
+            d = x.shape[0]
+            -20*np.exp(-0.2*np.sqrt((1/d)*(np.sum(x**2))))-np.exp((1/d)*np.sum(np.cos(2*np.pi*z)))+20+np.e + bias
+        return shifted_rotated_ackley_gen
+    
+
+
+    #F9: Shifted Rastrigin’s Function
     def _rastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def rastrigin(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rastrigin function value for a given input x
             z = x - optimum
             return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
         return rastrigin
+
+    #F10: Shifted Rotated Rastrigin’s Function
+    def _rotatedRastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def rotatedRastrigin(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate the Rastrigin function value for a given input x
+            z = (x - optimum) * _linearMatrix_gen(2)
+            return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
+        return rotatedRastrigin
     
-    # Schwefel's Problem F12
-    def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
-        def schwefel(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate the Schwefel function value for a given input x
-            return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
-        return schwefel
+
     
+<<<<<<< HEAD
     # Shifted Schwefel's Problem F2
     def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
@@ -125,6 +157,11 @@ class TestFuncts:
                 result += term_i
             return result
         return schwefel_gob
+=======
+
+    
+
+>>>>>>> bcb4f5344efcd23a9edb9f7ae9fad29a3378047f
 
     
 TF = TestFuncts

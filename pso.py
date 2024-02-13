@@ -187,7 +187,8 @@ class PSORunner:
         while not shouldTerminate:
             shouldTerminate = self.pso.update()
 
-    def mpso(self):
+    def mpso_ccd(self):
+        """Runs PSO with CCD"""
         start = time.time()
         for _ in range(30):
             self.run_PSO()
@@ -198,12 +199,14 @@ class PSORunner:
             
         print(f"it took {time.time() - start} seconds to run")
 
+    def mpso(self):
+        """Runs MPSO without CCD"""
+        start = time.time()
+        for _ in range(30):
+            self.run_PSO()
+            
+        print(f"it took {time.time() - start} seconds to run")
 
-"""
-pso(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
-     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-     enable_visualizer=True, function = tf.Sphere)
-"""
 
 def test_PSO():
 
