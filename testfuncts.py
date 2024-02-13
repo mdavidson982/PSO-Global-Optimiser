@@ -32,6 +32,22 @@ def _linearMatrix_gen(conditionNum):
     Bruh4 = np.dot(np.dot(Bruh3.T, Bruh1), Bruh3)
     return Bruh4
 
+def gram_schmidt(A):
+    """
+    Perform the Gram-Schmidt process on a matrix A.
+    Returns an orthonormal basis for the column space of A.
+    """
+    Q, R = np.linalg.qr(A)
+    return Q
+
+def create_orthogonal_matrix(n):
+    """
+    Create an n by n orthogonal matrix.
+    """
+    A = np.random.rand(n, n)  # Generating a random matrix
+    orthogonal_matrix = gram_schmidt(A)
+    return orthogonal_matrix
+
 class TestFuncts:
 
     def generate_function(functionID, optimum: p.ADTYPE, bias: p.DTYPE):
@@ -75,12 +91,23 @@ class TestFuncts:
             return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
         return shifted_schwefel
     
+    #F3: Shifted Rotated High Condition Elliptic
+    def _shifted_elliptic_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def shifted_elliptic(x: p.ADTYPE) -> p.DTYPE:
+            orth_matrix = create_orthogonal_matrix(len(10)) #Just 10 by 10 for now. We don't have examples of how the matrix should be look.
+            shaped_optimum = opt_reshape(x, optimum)
+            z = (x - shaped_optimum)
+            indexes = np.arange(z.shape[0] - 1)
+            return np.sum(((10**6)**(indexes/(len(z)-1)))*(z[indexes])**2) + bias
+            
     #F4: F4: Shifted Schwefel’s Problem 1.2 with Noise in Fitness
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def schwefel(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Schwefel function value for a given input x
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
         return schwefel
+    
+    
     
     #F6: Shifted Rosenbrock’s Function
     def _rosenbrock_gen(optimum:p.ADTYPE, bias: p.DTYPE):
@@ -133,7 +160,6 @@ class TestFuncts:
     
 
     
-<<<<<<< HEAD
     # Shifted Schwefel's Problem F2
     def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
@@ -157,11 +183,9 @@ class TestFuncts:
                 result += term_i
             return result
         return schwefel_gob
-=======
 
     
 
->>>>>>> bcb4f5344efcd23a9edb9f7ae9fad29a3378047f
 
     
 TF = TestFuncts
