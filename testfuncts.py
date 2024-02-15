@@ -20,7 +20,7 @@ def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     new_shape = optimum.shape + ((1,) * (n1-n2))
     return optimum.reshape(new_shape)
 
-#Function used in Griewank test, placeholder values as Danh is big bozo
+#Function used in Griewank test, placeholder values, code was created with ChatGPT
 def _linearMatrix_gen(conditionNum):
     # Generate a diagonal scaling matrix Bruh1
     singular_values = np.linspace(1, conditionNum, p.NUM_DIM)
