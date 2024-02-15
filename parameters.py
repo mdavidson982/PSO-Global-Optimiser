@@ -25,6 +25,8 @@ LOWER_BOUND = UPPER_BOUND*-1
 OPTIMUM = np.zeros(NUM_DIM, dtype=DTYPE)
 BIAS: DTYPE = 45
 
+MPSO_RUNS = 30
+
 #Velocity restrictor [0-1].  
 ALPHA: np.float64 = 0.9
 

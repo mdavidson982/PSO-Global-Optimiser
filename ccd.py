@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import optimize
 import parameters as p
+import time
 
 def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE, 
         alpha: p.DTYPE, tol: p.DTYPE, max_its: int, third_term_its: int, func):
@@ -22,19 +23,18 @@ def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE,
     l2 = list(reversed(l1))
     l1 = l1 + l2 + l2 + l1
 
+    # Helper function which fixes all but the ith coordinate in place, and performs the objective function.
+    def _fn(x, dim):
+        q[dim] = x
+        return func(q)
+
     # Performs max_its iterations of a FBBF run (see page 11)
     for _ in range(max_its):
 
         # A single FBBF run
         for i in l1:
-
-            # Helper function which fixes all but the ith coordinate in place, and performs the objective function.
-            def _fn(x):
-                q[i] = x
-                return func(q)
-            
             # Since _fn will automatically set values for q, no need to assign any new variables.
-            optimize.brent(_fn, brack=I[:, i])
+            optimize.brent(_fn, args=(i,), brack=I[:, i])
 
         # Record the output of the function after a single FBBF run, for third termination criteria.
         old_bests = np.roll(old_bests, 1)
@@ -60,7 +60,16 @@ def testCCD():
     initial = np.random.rand(dim)*(ub - lb) + lb
     optimum = np.zeros(dim)
 
+    initial = np.append(initial, 0)
+
     test_func = testfuncts.TestFuncts.generate_function("rosenbrock", optimum, bias=0)
 
+    start = time.time()
     z = CCD(initial, lb, ub, alpha = 0.2, tol=0.0001, max_its = 20, third_term_its = 6, func = test_func)
+    end = time.time()
+
+    print(f"It took {end - start} seconds to run")
+
     print(z)
+
+#testCCD()

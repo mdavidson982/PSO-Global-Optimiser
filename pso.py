@@ -79,6 +79,7 @@ class PSO:
     iterations: int = 0
     optimum: p.ADTYPE
     bias: p.DTYPE
+    mpso_runs: int
 
     ccd_alpha: p.DTYPE
     ccd_max_its: int
@@ -90,7 +91,7 @@ class PSO:
     def __init__(self, num_part: int, num_dim: int, alpha: p.DTYPE, 
                 upper_bound: p.ADTYPE, lower_bound: p.ADTYPE,
                 max_iterations: int, w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE, tolerance: p.DTYPE,
-                mv_iteration: int, optimum: p.ADTYPE, bias: p.DTYPE, functionID: str | int,
+                mv_iteration: int, optimum: p.ADTYPE, bias: p.DTYPE, functionID: str | int, mpso_runs: int,
                 ccd_alpha: p.DTYPE, ccd_max_its: int, ccd_tol: p.DTYPE, ccd_third_term_its: int):
         self.num_part = num_part
         self.num_dim = num_dim
@@ -106,8 +107,10 @@ class PSO:
         self.optimum = optimum
         self.bias = bias
         self.functionID = functionID
+        self.mpso_runs = mpso_runs
         self.function = tf.TF.generate_function(functionID=functionID, optimum=optimum, bias=bias)
         self.g_best = None
+
         self.ccd_alpha = ccd_alpha
         self.ccd_max_its = ccd_max_its
         self.ccd_tol = ccd_tol
@@ -190,7 +193,7 @@ class PSORunner:
     def mpso_ccd(self):
         """Runs PSO with CCD"""
         start = time.time()
-        for _ in range(30):
+        for _ in range(self.pso.mpso_runs):
             self.run_PSO()
             self.pso.g_best = ccd.CCD(
                 initial=self.pso.g_best, lb = self.pso.lower_bound, ub = self.pso.upper_bound,
@@ -202,7 +205,7 @@ class PSORunner:
     def mpso(self):
         """Runs MPSO without CCD"""
         start = time.time()
-        for _ in range(30):
+        for _ in range(self.pso.mpso_runs):
             self.run_PSO()
             
         print(f"it took {time.time() - start} seconds to run")
@@ -213,14 +216,17 @@ def test_PSO():
     pso = PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
         max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
         optimum=p.OPTIMUM, bias=p.BIAS, functionID=p.FUNCT, ccd_alpha=p.CCD_ALPHA, ccd_tol=p.CCD_TOL, ccd_max_its=p.CCD_MAX_ITS,
-        ccd_third_term_its=p.CCD_THIRD_TERM_ITS)
+        ccd_third_term_its=p.CCD_THIRD_TERM_ITS, mpso_runs=30)
+    
+    import json
 
-    runner = PSORunner(pso)
-    runner.mpso()
+    #runner = PSORunner(pso)
+    #runner.mpso_ccd()
+    #print(runner.pso.g_best)
 
     
 
-test_PSO()
+#test_PSO()
 
 
 

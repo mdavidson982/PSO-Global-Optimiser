@@ -5,14 +5,42 @@ import consts as c
 
 SPHEREID = 1
 SPHERESTRING = "sphere"
+
+SHIFTEDSCHWEFELID = 2
+SHIFTEDSCHWEFELSTRING = "shiftedschwefel"
+
+SHIFTEDELLIPTICID = 3
+SHIFTEDELLIPTICSTRING = "shiftedelliptic"
+
+SCHWEFELID = 4
+SCHWEFELSTRING = "schwefel"
+
+SCHWEFELGOBID = 5
+SCHWEFELGOBSTRING = "schwefelgob"
+
 ROSENBROCKID = 6
 ROSENBROCKSTRING = "rosenbrock"
-GRIEWANKSTRING = "griewank"
+
 GRIEWANKID = 7
+GRIEWANKSTRING = "griewank"
+
+SHIFTEDROTATEDACKLEYID = 8
+SHIFTEDROTATEDACKLEYSTRING = "shiftedrotatedackley"
+
 RASTRIGINID = 9
 RASTRIGINSTRING = "rastrigin"
+
 ROTATEDRASTRIGINID = 10
-RASTRIGINSTRING = "rotated rastrigin"
+ROTATEDRASTRIGINSTRING = "rotatedrastrigin"
+
+TESTFUNCTIDS = [SPHEREID, SHIFTEDSCHWEFELID, SHIFTEDELLIPTICID, SCHWEFELID,
+                    SCHWEFELGOBID, ROSENBROCKID, GRIEWANKID, SHIFTEDROTATEDACKLEYID,
+                    RASTRIGINID, ROTATEDRASTRIGINID]
+
+TESTFUNCTSTRINGS = [SPHERESTRING, SHIFTEDSCHWEFELSTRING, SHIFTEDELLIPTICSTRING, SCHWEFELSTRING,
+                    SCHWEFELGOBSTRING, ROSENBROCKSTRING, GRIEWANKSTRING, SHIFTEDROTATEDACKLEYSTRING,
+                    RASTRIGINSTRING, ROTATEDRASTRIGINSTRING]
+
 
 def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     n1 = len(x.shape)
@@ -56,10 +84,24 @@ class TestFuncts:
 
         if functionID == SPHEREID or functionID == SPHERESTRING:
             func = TF._sphere_gen
+        elif functionID == SHIFTEDSCHWEFELID:
+            func = TF._schwefel_gen
+        elif functionID == SHIFTEDELLIPTICID:
+            func = TF._shifted_elliptic_gen
+        elif functionID == SCHWEFELID:
+            func = TF._schwefel_gen
+        elif functionID == SCHWEFELGOBID:
+            func = TF._schwefel_gob_gen
         elif functionID == ROSENBROCKID or functionID == ROSENBROCKSTRING:
             func = TF._rosenbrock_gen
+        elif functionID == GRIEWANKID:
+            func = TF._griewank_gen
+        elif functionID == SHIFTEDROTATEDACKLEYID:
+            func = TF._shifted_rotated_ackley_gen
         elif functionID == RASTRIGINID or functionID == RASTRIGINSTRING:
             func = TF._rastrigin_gen
+        elif functionID == ROTATEDRASTRIGINID:
+            func = TF._rotatedRastrigin_gen
         else:
             raise Exception(f"functionID {functionID} does not match any available option")
         return func(optimum=optimum, bias=bias)
@@ -99,6 +141,7 @@ class TestFuncts:
             z = (x - shaped_optimum)
             indexes = np.arange(z.shape[0] - 1)
             return np.sum(((10**6)**(indexes/(len(z)-1)))*(z[indexes])**2) + bias
+        return shifted_elliptic
             
     #F4: F4: Shifted Schwefel’s Problem 1.2 with Noise in Fitness
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
@@ -107,7 +150,21 @@ class TestFuncts:
             return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
         return schwefel
     
-    
+    #F5 Schwefel's Problem 2.6 with Global Optimum on Bounds
+    def _schwefel_gob_gen(optimum:p.ADTYPE, bias: p.DTYPE):
+        def schwefel_gob(x: p.ADTYPE) -> p.DTYPE:
+            # Calculate Schwefel's problem 2.6 function value for a given input x
+            #This is found on chatgpt, is supposed to work for an n dimensional matrix
+            #n should represent number of rows. Unsure if ln 122 (for i in range) line
+            #is necessary but felt like it made sense 
+            n = len(x)
+            result = 0
+
+            for i in range(n):
+                term_i = max(abs(x[i] - 500), 0) + np.sin(np.sqrt(abs(x[i] - 500)))
+                result += term_i
+            return result
+        return schwefel_gob
     
     #F6: Shifted Rosenbrock’s Function
     def _rosenbrock_gen(optimum:p.ADTYPE, bias: p.DTYPE):
@@ -137,11 +194,10 @@ class TestFuncts:
         def shifted_rotated_ackley_gen(x: p.ADTYPE) -> p.DTYPE:
             z = (x - optimum) * _linearMatrix_gen(100)
             d = x.shape[0]
-            -20*np.exp(-0.2*np.sqrt((1/d)*(np.sum(x**2))))-np.exp((1/d)*np.sum(np.cos(2*np.pi*z)))+20+np.e + bias
+            return -20*np.exp(-0.2*np.sqrt((1/d)*(np.sum(x**2))))-np.exp((1/d)*np.sum(np.cos(2*np.pi*z)))+20+np.e + bias
         return shifted_rotated_ackley_gen
     
-
-
+    
     #F9: Shifted Rastrigin’s Function
     def _rastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def rastrigin(x: p.ADTYPE) -> p.DTYPE:
@@ -158,34 +214,6 @@ class TestFuncts:
             return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
         return rotatedRastrigin
     
-
-    
-    # Shifted Schwefel's Problem F2
-    def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
-        def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate the Shifted Schwefel function value for a given input x
-            z = x - optimum
-            return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
-        return shifted_schwefel
-    
-    # Schwefel's Problem 2.6 with Global Optimum on Bounds
-    def _schwefel_gob_gen(optimum:p.ADTYPE, bias: p.DTYPE):
-        def schwefel_gob(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate Schwefel's problem 2.6 function value for a given input x
-            #This is found on chatgpt, is supposed to work for an n dimensional matrix
-            #n should represent number of rows. Unsure if ln 122 (for i in range) line
-            #is necessary but felt like it made sense 
-            n = len(x)
-            result = 0
-
-            for i in range(n):
-                term_i = max(abs(x[i] - 500), 0) + np.sin(np.sqrt(abs(x[i] - 500)))
-                result += term_i
-            return result
-        return schwefel_gob
-
-    
-
 
     
 TF = TestFuncts
