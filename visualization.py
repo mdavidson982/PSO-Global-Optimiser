@@ -64,7 +64,7 @@ class Visualization:
     height: int
 
     #Internal data about PSO
-    pso: pSO.PSO
+    pso: pSO.PSOData
     particles: list
     g_best_part: int
 
@@ -86,7 +86,7 @@ class Visualization:
     update_time: int
     contour_img_path: str
     
-    def __init__(self, root: tk.Tk, pso: pSO.PSO, update_time: int = 1000):
+    def __init__(self, root: tk.Tk, pso: pSO.PSOData, update_time: int = 1000):
         u.clear_temp() #Clear temporary png files
         self.update_time = update_time - update_time % FRAME_MS # Ensures that an iteration of PSO can evenly be divided into frames
         self.root = root
@@ -305,7 +305,7 @@ class Visualization:
 
 def TestVisualizer():
     root = tk.Tk()
-    pso = pSO.PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
+    pso = pSO.PSOData(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
     max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
     optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
 

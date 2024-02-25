@@ -106,7 +106,7 @@ def run_benchmark_tests():
         if name in IGNORELIST or id in IGNORELIST:
             continue
 
-        pso_obj = pso.PSO(
+        pso_obj = pso.PSOData(
             num_part = 50, 
             num_dim= dims, 
             alpha = 0.9, 
