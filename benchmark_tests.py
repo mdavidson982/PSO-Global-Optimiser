@@ -18,8 +18,7 @@ IGNORELIST = [testfuncts.SHIFTEDELLIPTICID,
               testfuncts.ROTATEDRASTRIGINID
               ]
 
-
-def record_run(runner: pso.PSORunner, mpso_or_mpsoccd: int, name: str, id: int):
+def record_run(runner: pso.MPSO_CCDRunner, mpso_or_mpsoccd: int, name: str, id: int):
     start = time.time()
     
     if mpso_or_mpsoccd == MPSORUN:
@@ -76,7 +75,7 @@ def run_benchmark_tests():
 
     columns = ["Function Name",
                 "Function ID",
-                "MPSO or MPSOCCD" 
+                "MPSO or MPSOCCD",
                 "Time taken", 
                 "Global best",
                 #"Max iterations",
@@ -129,7 +128,7 @@ def run_benchmark_tests():
             ccd_max_its=20,
             ccd_third_term_its=5
             )
-        runner = pso.PSORunner(pso_obj)
+        runner = pso.MPSO_CCDRunner(pso_obj)
 
         for run_type in (MPSORUN, MPSOCCDRUN):
             rows.append(record_run(runner, run_type, name, id))

@@ -129,8 +129,15 @@ class TestFuncts:
     def _shifted_schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def shifted_schwefel(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Shifted Schwefel function value for a given input x
+
+            # Tile the array by len(array) times.  Then, take the lower triangluar matrix.
+            # This is done because schwefel continually adds sums up to the ith index,
+            # So lower triangular matrices will automatically zero out any other values.
             z = x - optimum
-            return -np.sum(z * np.sin(np.sqrt(np.abs(z))))
+            length = len(z)
+            new = np.tile(z, length).reshape((length, length))
+            lower = np.tril(new)
+            return np.sum(np.sum(lower, axis=1)**2) + bias
         return shifted_schwefel
     
     #F3: Shifted Rotated High Condition Elliptic
@@ -146,8 +153,14 @@ class TestFuncts:
     #F4: F4: Shifted Schwefel’s Problem 1.2 with Noise in Fitness
     def _schwefel_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def schwefel(x: p.ADTYPE) -> p.DTYPE:
-            # Calculate the Schwefel function value for a given input x
-            return -np.sum(x * np.sin(np.sqrt(np.abs(x))))
+            z = x - optimum
+            length = len(z)
+            new = np.tile(z, length).reshape((length, length))
+            lower = np.tril(new)
+            prod_1 = np.sum(np.sum(lower, axis=1)**2)
+            prod_2 = 1 + 0.4*np.abs(np.random.standard_normal(1))
+            return prod_1*prod_2
+
         return schwefel
     
     #F5 Schwefel's Problem 2.6 with Global Optimum on Bounds
@@ -183,7 +196,6 @@ class TestFuncts:
     def _griewank_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def griewank(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rosenbrock function value for a given input x
-            shaped_optimum = opt_reshape(x, optimum)
             z = (x - shaped_optimum)*_linearMatrix_gen(3)
             indexes = np.arange(z.shape[0])
             return np.sum(z[indexes]**2/4000) - (np.prod(np.cos(z[indexes]/np.sqrt(indexes)))) + 1 + bias

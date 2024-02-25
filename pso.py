@@ -5,6 +5,7 @@ import update as up
 import testfuncts as tf
 import ccd
 import time
+import pandas as pd
 
 def validate_learn_params(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
     """Determines if learning params are correct"""
@@ -24,6 +25,21 @@ def validate_learn_params(w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> bool:
 #p_best, and g_best functions until we get a satisfactory answer, and loop under the number of times defined in
 #max iteration var
 
+class PSOInterface:
+    """
+    Interface that defines PSO operations
+    """
+
+    def initialize(self):
+        pass
+
+    def update(self) -> bool:
+        pass
+
+    def should_terminate(self) -> bool:
+        pass
+
+    def get_pso(self)
 
 class PSO:
     """
@@ -128,7 +144,6 @@ class PSO:
         # If the previously recorded g_best from another run is better than the current g_best, keep it.
         # Otherwise, replace.
 
-        
         if self.g_best is None or (g_best[-1] < self.g_best[-1]):
             self.g_best = g_best
 
@@ -174,14 +189,48 @@ class PSO:
     def second_termination(self) -> bool:
         """Second termination criteria, specified in document"""
         return (abs(self.old_g_best[0]-self.old_g_best[-1])/(abs(self.old_g_best[0]) + self.tolerance)) < self.tolerance
+    
 
-# Non-graphical runner
-class PSORunner:
-    "Runs an instance of the PSO algorithm."
-    pso: PSO
+class PSOLoggerConfig:
+    """
+    Settings for the PSOLogger class.
+    """
+    should_log: bool = False
 
-    def __init__(self, pso: PSO):
+    def __init__(
+            self, 
+            should_log: bool = False
+            ):
+        self.should_log = should_log
+
+default_pso_logger_config = PSOLoggerConfig()
+
+class PSOLogger:
+    """
+    Wrapper for the PSO object, that enables logging.
+    """    
+    pso: PSO = None
+    config: PSOLoggerConfig
+
+    def __init__(self, pso: PSO, config: PSOLoggerConfig = default_pso_logger_config):
         self.pso = pso
+        self.config = config
+        self.df = pd.DataFrame()
+    
+    def initialize(self):
+        self.pso.initialize()
+
+        
+# Non-graphical runner
+class MPSO_CCDRunner:
+    "Runs an instance of the PSO algorithm."
+    pso: PSOInterface
+
+    def __init__(self, pso: PSO, logging_settings: PSOLoggerConfig = default_pso_logger_config):
+        if logging_settings.should_log:
+            self.pso = PSOLogger(pso)
+        else:
+            self.pso = pso
 
     def run_PSO(self):
         "Runs PSO"
@@ -209,7 +258,6 @@ class PSORunner:
             self.run_PSO()
             
         print(f"it took {time.time() - start} seconds to run")
-
 
 def test_PSO():
 
