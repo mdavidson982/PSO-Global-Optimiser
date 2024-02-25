@@ -64,7 +64,7 @@ def update_position(x_pos: p.ADTYPE, v_part: p.ADTYPE):
     returns an updated position ndarray"""
     return x_pos + v_part
 
-def verify_bounds(upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, matrix: p.ADTYPE):
+def verify_bounds(upper_bounds: p.ADTYPE, lower_bounds: p.ADTYPE, matrix: p.ADTYPE):
 
     """The following function verifies that the matrix does not exceed the upper or lower bound dimensions. 
     Here's an example of constraining both Max and Min:
@@ -86,7 +86,7 @@ def verify_bounds(upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, matrix: p.ADTYPE
     (Notice how row 3 in the original array changed from 3, 7, 9 to 5, 7, 7 
     This is because 5 is the minimum value seen in the third index of the lower bound array and 7 is the max value in the upper bound array. 
     Because of this, the 3 and 9 in the last row of the original array change to min and max respectively)"""
-    matrix = np.maximum(matrix, lower_bound[:, np.newaxis])
-    matrix = np.minimum(matrix, upper_bound[:, np.newaxis])
+    matrix = np.maximum(matrix, lower_bounds[:, np.newaxis])
+    matrix = np.minimum(matrix, upper_bounds[:, np.newaxis])
 
     return matrix

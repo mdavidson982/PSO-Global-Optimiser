@@ -35,14 +35,11 @@ class PSOInterface:
 
     def update(self) -> bool:
         pass
-
-    def should_terminate(self) -> bool:
-        pass
     
     def CCD(self) -> p.ADTYPE:
         pass
     
-    def set_g_best(self):
+    def set_g_best(self, g_best: p.ADTYPE):
         pass
 
 @dataclass        
@@ -116,7 +113,7 @@ class CCDHyperparameters:
             return False
         return True
     
-@dataclass
+
 class DomainData:
     """
     Class that holds information about the objective function's
@@ -129,6 +126,10 @@ class DomainData:
     upper_bound: p.ADTYPE
     lower_bound: p.ADTYPE
     v_max: p.ADTYPE
+
+    def __init__(self, upper_bound: p.ADTYPE, lower_bound: p.ADTYPE):
+        self.upper_bound = upper_bound
+        self.lower_bound = lower_bound
 
 @dataclass
 class IterationData:
@@ -187,14 +188,12 @@ class PSOData:
     g_best: p.ADTYPE
     old_g_best: p.ADTYPE
 
-    mpso_runs: int
-
     iterations: int = 0
 
     
     def __init__(self, pso_hyperparameters: PSOHyperparameters,
                 ccd_hyperparameters: CCDHyperparameters, domain_data: DomainData,
-                function: any, mpso_runs: int):
+                function: any):
         
         self.pso_hypers = pso_hyperparameters
         if not self.pso_hypers.has_valid_learning_params():
@@ -206,7 +205,6 @@ class PSOData:
         
         self.domain_data = domain_data
 
-        self.mpso_runs = mpso_runs
         self.function = function
         self.g_best = None
 
@@ -223,7 +221,7 @@ class PSOData:
 
         self.pos_matrix = pos_matrix
         self.vel_matrix = vel_matrix
-        self.p_best = p_best,
+        self.p_best = p_best
         self.domain_data.v_max = v_max
         
         # If the previously recorded g_best from another run is better than the current g_best, keep it.
@@ -233,7 +231,7 @@ class PSOData:
 
         # Store the image of past g_bests for the second terminating condition.  Multiplies a ones array by the maximum possible value
         # So that comparison starts out always being true.
-        self.old_g_best = np.finfo(p.DTYPE).max*np.ones(self.mv_iteration, dtype=p.DTYPE)
+        self.old_g_best = np.finfo(p.DTYPE).max*np.ones(self.pso_hypers.mv_iteration, dtype=p.DTYPE)
         self.iterations = 0
 
     def update(self) -> bool:
@@ -252,8 +250,8 @@ class PSOData:
                                            matrix = self.vel_matrix)
         self.pos_matrix = up.update_position(x_pos=self.pos_matrix, v_part=self.vel_matrix)
         #added verify bound to the pso loop. Assumed position matrix was the correct input. Putting this comment here to make sure that's right later when we review.
-        self.pos_matrix = up.verify_bounds(upper_bound = self.domain_data.upper_bound, 
-                                           lower_bound = self.domain_data.lower_bound, 
+        self.pos_matrix = up.verify_bounds(upper_bounds = self.domain_data.upper_bound, 
+                                           lower_bounds = self.domain_data.lower_bound, 
                                            matrix = self.pos_matrix)
         self.p_best = up.update_p_best(pos_matrix = self.pos_matrix, 
                                        past_p_best = self.p_best, 
@@ -317,7 +315,6 @@ class PSOLogger:
     """    
     pso: PSOData = None
     config: PSOLoggerConfig
-    
 
     def __init__(self, pso: PSOData, config: PSOLoggerConfig = PSOLoggerConfig()):
         self.pso = pso
@@ -326,6 +323,17 @@ class PSOLogger:
     
     def initialize(self):
         self.pso.initialize()
+
+    def update(self) -> bool:
+        should_terminate = self.pso.update()
+        return should_terminate
+    
+    def CCD(self) -> p.ADTYPE:
+        return self.pso.CCD()
+    
+    def set_g_best(self, g_best: p.ADTYPE):
+        self.pso.g_best = g_best
+    
 
 
         
@@ -370,20 +378,60 @@ class MPSO_CCDRunner:
 
 def test_PSO():
 
-    pso = PSOData(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
-        max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-        optimum=p.OPTIMUM, bias=p.BIAS, functionID=p.FUNCT, ccd_alpha=p.CCD_ALPHA, ccd_tol=p.CCD_TOL, ccd_max_its=p.CCD_MAX_ITS,
-        ccd_third_term_its=p.CCD_THIRD_TERM_ITS, mpso_runs=30)
-    
-    import json
+    pso_hyperparameters = PSOHyperparameters(
+        num_part = p.NUM_PART,
+        num_dim=p.NUM_DIM, 
+        alpha = p.ALPHA,
+        max_iterations=p.MAX_ITERATIONS, 
+        w=p.W, 
+        c1=p.C1, 
+        c2=p.C2, 
+        tolerance=p.TOLERANCE, 
+        mv_iteration=p.NO_MOVEMENT_TERMINATION
+    )
 
+    ccd_hyperparameters = CCDHyperparameters(
+        ccd_alpha=p.CCD_ALPHA, 
+        ccd_tol=p.CCD_TOL, 
+        ccd_max_its=p.CCD_MAX_ITS,
+        ccd_third_term_its=p.CCD_THIRD_TERM_ITS
+    )
+
+    domain_data = DomainData(
+        upper_bound = p.UPPER_BOUND,
+        lower_bound = p.LOWER_BOUND
+    )
+
+    optimum = optimum=p.OPTIMUM
+    bias=p.BIAS,
+
+    function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
+
+    pso = PSOData(
+        pso_hyperparameters = pso_hyperparameters,
+        ccd_hyperparameters = ccd_hyperparameters,
+        domain_data = domain_data,
+        function = function
+    )
+
+    logging_settings = PSOLoggerConfig(
+        should_log=True
+    )
+
+    runner = MPSO_CCDRunner(
+        pso=pso, 
+        runs=30, 
+        logging_settings=logging_settings
+    )
+
+    #runner.mpso_ccd()
     #runner = PSORunner(pso)
     #runner.mpso_ccd()
-    #print(runner.pso.g_best)
+    #print(runner.pso.pso.g_best)
 
     
 
-#test_PSO()
+test_PSO()
 
 
 

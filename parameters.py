@@ -4,7 +4,7 @@ DTYPE = np.float64 # Data type to be used.
 ADTYPE = np.ndarray[DTYPE] #Alias of array datatype, for ease of use
 
 #Number of dimensions of problem
-NUM_DIM: int = 30
+NUM_DIM: int = 5
 #Number of particles that we want to use
 NUM_PART: int = 50
 
@@ -20,10 +20,10 @@ TOLERANCE: np.float64 = 10**-6
 FUNCT = "rosenbrock"
 
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
-UPPER_BOUND = np.ones(NUM_DIM, dtype=DTYPE)*1000
+UPPER_BOUND = np.ones(NUM_DIM, dtype=DTYPE)*100
 LOWER_BOUND = UPPER_BOUND*-1
-OPTIMUM = np.zeros(NUM_DIM, dtype=DTYPE)
-BIAS: DTYPE = 45
+OPTIMUM = np.zeros(NUM_DIM, dtype=DTYPE) + 1
+BIAS: DTYPE = 0
 
 MPSO_RUNS = 30
 

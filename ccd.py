@@ -42,7 +42,7 @@ def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE,
 
         # Third termination criteria.  Exits out of the program early if proposed solutions are not
         # Being improved within a certain tolerance criteria.
-        if abs(old_bests[0]-old_bests[-1])/(abs(old_bests[0]) + tol) < tol:
+        if abs((old_bests[0]-old_bests[-1])/(abs(old_bests[0]) + tol)) < tol:
             break
 
     # The format of g best is coordinates : f(coordinates).  Therefore, we need to append f(coordinates)
