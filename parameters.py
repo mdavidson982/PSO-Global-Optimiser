@@ -22,7 +22,7 @@ FUNCT = "rosenbrock"
 #Upper and lower bounds (U-L array).  Bound the domain of the function.
 UPPER_BOUND = np.ones(NUM_DIM, dtype=DTYPE)*100
 LOWER_BOUND = UPPER_BOUND*-1
-OPTIMUM = np.zeros(NUM_DIM, dtype=DTYPE) + 1
+OPTIMUM = np.zeros(NUM_DIM, dtype=DTYPE)
 BIAS: DTYPE = 0
 
 MPSO_RUNS = 30
