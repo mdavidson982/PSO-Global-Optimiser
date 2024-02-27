@@ -19,6 +19,9 @@ def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
         return new_array
     if array.ndim == 1:
          return array*scale_factor + lb
+    
+def jsonize_array(arr: p.ADTYPE):
+    arr.tolist()
 
 def descale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """

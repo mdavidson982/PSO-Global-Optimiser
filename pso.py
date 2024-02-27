@@ -7,6 +7,7 @@ import ccd
 import time
 import pandas as pd
 from dataclasses import dataclass
+import json
 
 #initialization variables
 #calls the initialization function in the initializer.py. 
@@ -53,7 +54,6 @@ class PSOInterface:
         pass
 
     
-
 @dataclass        
 class PSOHyperparameters:
     """Class which holds PSO hyperparameters
@@ -74,10 +74,10 @@ class PSOHyperparameters:
     num_part: int
     num_dim: int
     alpha: p.ADTYPE
-    w: p.ADTYPE
-    c1: p.ADTYPE
-    c2: p.ADTYPE
-    tolerance: p.ADTYPE
+    w: p.DTYPE
+    c1: p.DTYPE
+    c2: p.DTYPE
+    tolerance: p.DTYPE
     mv_iteration: int
     max_iterations: int
 
@@ -103,6 +103,15 @@ class PSOHyperparameters:
             return False
         return True
     
+    def to_json(self):
+        return json.dumps(self.__dict__)
+    
+    @classmethod
+    def from_json(cls, json_data):
+        dict = json.loads(json_data)
+        return cls(**dict)
+    
+
 @dataclass    
 class CCDHyperparameters:
     """
@@ -130,6 +139,14 @@ class CCDHyperparameters:
             return False
         return True
     
+    def to_json(self):
+        return json.dumps(self.__dict__)
+    
+    @classmethod
+    def from_json(cls, json_data):
+        dict = json.loads(json_data)
+        return cls(**dict)
+    
 
 class DomainData:
     """
@@ -147,6 +164,23 @@ class DomainData:
     def __init__(self, upper_bound: p.ADTYPE, lower_bound: p.ADTYPE):
         self.upper_bound = upper_bound
         self.lower_bound = lower_bound
+
+    def to_json(self):
+        dict = self.__dict__
+        for key, value in dict.items():
+            if type(value) is np.ndarray:
+                dict[key] = value.tolist()
+        return json.dumps(self.__dict__)
+    
+    @classmethod
+    def from_json(cls, json_data):
+        ndarray_keys = ["upper_bound", "lower_bound", "v_max"]
+
+        dictionary = json.loads(json_data)
+        for key, value in dict.items():
+            if key in ndarray_keys:
+                dictionary[key] = np.array(value)
+        return cls(**dictionary)
 
 @dataclass
 class IterationData:
@@ -187,9 +221,6 @@ class PSOData:
     seed:               Integer to use for RNG
     old_g_best:         matrix recording the last [mv_iteration] g_bests for use in second termination criteria
     iterations:         current iteration of the instance
-
-
-
     """
     pso_hypers: PSOHyperparameters
     ccd_hypers: CCDHyperparameters
@@ -337,6 +368,10 @@ class PSOLoggerConfig:
     Settings for the PSOLogger class.
     """
     should_log: bool = False
+    track_pos_matrix: bool = True
+    track_vel_matrix: bool = True
+    track_pbest_matrix: bool = True
+    notes: str = ""
 
 class PSOLogger:
     """
@@ -355,9 +390,13 @@ class PSOLogger:
     def initialize(self):
         self.mpso_iterations += 1
         self.pso.initialize()
+        
 
     def update(self) -> bool:
         should_terminate = self.pso.update()
+        
+
+
         return should_terminate
     
     def CCD(self) -> p.ADTYPE:
