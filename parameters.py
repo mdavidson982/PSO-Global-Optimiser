@@ -1,5 +1,7 @@
 import numpy as np
 
+from dataclasses import dataclass
+
 DTYPE = np.float64 # Data type to be used.
 ADTYPE = np.ndarray[DTYPE] #Alias of array datatype, for ease of use
 
@@ -44,3 +46,65 @@ CCD_ALPHA = 0.2
 CCD_MAX_ITS = 20
 CCD_TOL: DTYPE = 10**-6
 CCD_THIRD_TERM_ITS = 5
+
+
+
+
+@dataclass        
+class PSOHyperparameters:
+    """Class which holds PSO hyperparameters
+
+    num_part:           number of particles the instance will use
+    num_dim:            dimensions of the problem to be solved
+    alpha:              velocity constriction parameter
+    max_iterations:     maximum number of iterations the instance can run through
+    w:                  momentum parameter (see docs for more)
+    c1:                 cognitive parameter (see docs for more)
+    c2:                 social parameter (see docs for more)
+    tolerance:          part of second termination criteria (see docs)
+    mv_iteration:       part of second termination criteria (see docs)
+
+    has_valid_learning_params():  Determines if the parameters are valid"""
+
+    num_part: int
+    num_dim: int
+    alpha: p.ADTYPE
+    w: p.DTYPE
+    c1: p.DTYPE
+    c2: p.DTYPE
+    tolerance: p.DTYPE
+    mv_iteration: int
+    max_iterations: int
+
+    def has_valid_learning_params(self) -> bool:
+        if not (self.alpha < 1 and self.alpha > 0):
+            return False
+        if not (self.tolerance > 0):
+            return False
+        if not (self.num_part > 0):
+            return False
+        if not (self.num_dim > 0):
+            return False
+        if not (self.mv_iteration > 0):
+            return False
+        if not (self.max_iterations > 0):
+            return False
+        if not (self.c1 < 2 and self.c1 > 0):
+            return False
+        if not (self.c2 < 2 and self.c2 > 0):
+            return False
+        # See page 5 of manuscript for below condition
+        if not (self.w < 1 and self.w > 0.5*(self.c1+self.c2)-1):
+            return False
+        return True
+    
+    def to_json(self):
+        return json.dumps(self.__dict__)
+    
+    @classmethod
+    def from_json(cls, json_data):
+        dict = json.loads(json_data)
+        return cls(**dict)
+
+
+

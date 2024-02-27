@@ -3,8 +3,10 @@ import testfuncts
 import numpy as np
 import pandas as pd
 import time
+import parameters as p
 from datetime import datetime
 import warnings
+import json
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -18,6 +20,7 @@ IGNORELIST = [testfuncts.SHIFTEDELLIPTICID,
               testfuncts.ROTATEDRASTRIGINID
               ]
 
+
 def record_run(runner: pso.MPSO_CCDRunner, mpso_or_mpsoccd: int, name: str, id: int):
     start = time.time()
     
@@ -26,6 +29,7 @@ def record_run(runner: pso.MPSO_CCDRunner, mpso_or_mpsoccd: int, name: str, id: 
         type = "MPSO"
         runner.mpso()
         print(f"Ended {name} mpso run")
+
     elif mpso_or_mpsoccd == MPSOCCDRUN:
         print(f"Starting {name} mpsoccd run")
         type = "MPSOCCD"
@@ -33,34 +37,7 @@ def record_run(runner: pso.MPSO_CCDRunner, mpso_or_mpsoccd: int, name: str, id: 
         print(f"Ended {name} mpsoccd run")
     
     time_taken = time.time() - start
-
     pso_obj = runner.pso
-
-    return {
-        "Function Name": name,
-        "Function ID": id,
-        "MPSO or MPSOCCD": type, 
-        "Time taken": time_taken, 
-        "Global best": pso_obj.g_best,
-        #"Max iterations": pso_obj.iterations,
-        "Dimensions": pso_obj.num_dim, 
-        "Number of particles": pso_obj.num_part, 
-        "Max Iterations": pso_obj.max_iterations, 
-        "No Movement Termation": pso_obj.mv_iteration,
-        "Tolerance": pso_obj.tolerance,
-        "Upper Bound": pso_obj.upper_bound,
-        "Lower Bound": pso_obj.lower_bound,
-        "Optimum": pso_obj.optimum,
-        "Bias": pso_obj.bias,
-        "Alpha": pso_obj.alpha,
-        "W": pso_obj.w,
-        "C1": pso_obj.c1,
-        "C2": pso_obj.c2,
-        "CCD alpha": pso_obj.ccd_alpha,
-        "CCD max iterations": pso_obj.ccd_max_its,
-        "CCD tolerance": pso_obj.ccd_tol,
-        "CCD third term its": pso_obj.ccd_third_term_its
-    }
 
 def run_benchmark_tests():
 
@@ -71,34 +48,8 @@ def run_benchmark_tests():
     lower_bound = upper_bound*-1
     optimum = np.zeros(dims, dtype=dtype)
     current_datetime = datetime.now()
-    rows = []
 
-    columns = ["Function Name",
-                "Function ID",
-                "MPSO or MPSOCCD",
-                "Time taken", 
-                "Global best",
-                #"Max iterations",
-                "Dimensions", 
-                "Number of particles", 
-                "Max Iterations", 
-                "No Movement Termation",
-                "Tolerance",
-                "Upper Bound",
-                "Lower Bound",
-                "Optimum",
-                "Bias",
-                "Alpha",
-                "W",
-                "C1",
-                "C2",
-                "CCD alpha",
-                "CCD max iterations",
-                "CCD tolerance",
-                "CCD third term its"
-                ]
 
-    print("Running Test functions")
     for i in range(len(testfuncts.TESTFUNCTIDS)):
         name = testfuncts.TESTFUNCTSTRINGS[i]
         id = testfuncts.TESTFUNCTIDS[i]
@@ -106,28 +57,53 @@ def run_benchmark_tests():
         if name in IGNORELIST or id in IGNORELIST:
             continue
 
-        pso_obj = pso.PSOData(
-            num_part = 50, 
-            num_dim= dims, 
-            alpha = 0.9, 
-            upper_bound=upper_bound, 
-            lower_bound=lower_bound,
-            max_iterations=100, 
-            w=0.8, 
-            c1=0.4, 
-            c2=0.4, 
-            tolerance = 10**-6,
-            mv_iteration= 20,
-            optimum=optimum, 
-            bias=0, 
-            functionID=id, 
-            mpso_runs=30,
+        pso_hyperparameters = PSOHyperparameters(
+        num_part = p.NUM_PART,
+        num_dim= p.NUM_DIM, 
+        alpha = p.ALPHA,
+        max_iterations=p.MAX_ITERATIONS, 
+        w=p.W, 
+        c1=p.C1, 
+        c2=p.C2, 
+        tolerance=p.TOLERANCE, 
+        mv_iteration=p.NO_MOVEMENT_TERMINATION
+        )
 
-            ccd_alpha=0.2, 
-            ccd_tol=10**-6, 
-            ccd_max_its=20,
-            ccd_third_term_its=5
-            )
+        ccd_hyperparameters = CCDHyperparameters(
+            ccd_alpha=p.CCD_ALPHA, 
+            ccd_tol=p.CCD_TOL, 
+            ccd_max_its=p.CCD_MAX_ITS,
+            ccd_third_term_its=p.CCD_THIRD_TERM_ITS
+        )
+
+        domain_data = DomainData(
+            upper_bound = p.UPPER_BOUND,
+            lower_bound = p.LOWER_BOUND
+        )
+
+        runner_config = MPSORunnerConfigs(use_ccd=True)
+
+        optimum = optimum=p.OPTIMUM
+        bias=p.BIAS,
+        function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
+
+        pso = PSOData(
+            pso_hyperparameters = pso_hyperparameters,
+            ccd_hyperparameters = ccd_hyperparameters,
+            domain_data = domain_data,
+            function = function
+        )
+
+        logging_settings = PSOLoggerConfig(
+            should_log=True
+        )
+
+        runner = MPSO_CCDRunner(
+            pso=pso, 
+            runs=5, 
+            logging_settings=logging_settings,
+            runner_settings=runner_config
+        )
         runner = pso.MPSO_CCDRunner(pso_obj)
 
         for run_type in (MPSORUN, MPSOCCDRUN):
