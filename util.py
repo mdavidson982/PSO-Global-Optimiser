@@ -5,6 +5,7 @@ import numpy as np
 import consts as c
 import os
 import time
+import json
 
 def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
@@ -20,8 +21,11 @@ def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     if array.ndim == 1:
          return array*scale_factor + lb
     
-def jsonize_array(arr: p.ADTYPE):
-    arr.tolist()
+def np_to_json(arr: np.ndarray):
+    return json.dumps(arr.tolist())
+
+def np_from_json(s: str):
+    return np.array(json.loads(s))
 
 def descale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """

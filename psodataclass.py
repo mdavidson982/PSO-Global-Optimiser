@@ -4,6 +4,12 @@ import parameters as p
 import numpy as np
 
 
+@dataclass
+class PSOConfig:
+    """Class which holds any configurations for PSO besides hyperparameters, domain data etc.
+    seed:               seed which is used to generate random numbers.
+    """
+    seed: int = 
     
 @dataclass        
 class PSOHyperparameters:

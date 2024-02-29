@@ -8,6 +8,7 @@ import time
 import pandas as pd
 import psodataclass as dc
 from dataclasses import dataclass
+import util as u
 import json
 
 #initialization variables
@@ -24,10 +25,44 @@ import json
 #p_best, and g_best functions until we get a satisfactory answer, and loop under the number of times defined in
 #max iteration var
 
+class PSOInterface:
+    """
+    Interface that defines PSO operations
+    initialize():     Initialize the PSO data before the PSO loop
+    update():         Update the PSO data according to PSO scheme
+    CCD():            Run CCD from PSO data
+    set_g_best():     Set the g_best of the PSO data
+    """
+
+    g_best: p.ADTYPE
+
+    def initialize(self):
+        """
+        Run initialization to get necessary matrices
+        """
+        pass
+
+    def update(self) -> bool:
+        """
+        Performs an iteration of the PSO algorithm.  Returns whether the instance should terminate.
+        """
+        pass
+
+    def CCD(self) -> p.ADTYPE:
+        """
+        Run CCD by taking g_best as a main input, and refining it
+        """
+        pass
+
 @dataclass
 class PSOData:
     """
     Holds the data that PSO uses to run its algorithm
+
+    pso_hypers:         Hyperparameters for PSO (see psodataclass.PSOHyperparameters)
+    ccd_hypers:         Hyperparameters for CCD (see psodataclass.CCDHyperparameters)
+    domain_data:        Information about the domain of the objective function (see psodataclass.DomainData)
+    pso_configs:        Contains additional configurations for PSO (see psodataclass.PSOConfig)
 
     function:           the function to be optimized
     pos_matrix:         matrix recording the position of the particles
@@ -36,27 +71,32 @@ class PSOData:
     g_best:             vector recording the global best of the instance
 
     seed:               Integer to use for RNG
-    old_g_best:         matrix recording the last [mv_iteration] g_bests for use in second termination criteria
+    old_g_best:         matrix recording the last g_bests for use in second termination criteria
     iterations:         current iteration of the instance
+
+
     """
     pso_hypers: dc.PSOHyperparameters
     ccd_hypers: dc.CCDHyperparameters
     domain_data: dc.DomainData
-    mv_iteration: int
+    pso_configs: dc.PSOConfig
     function: any
     pos_matrix: p.ADTYPE
     vel_matrix: p.ADTYPE
     p_best: p.ADTYPE
     g_best: p.ADTYPE
     old_g_best: p.ADTYPE
-    seed: int
-    iterations: int = 0
+    iteration: int = 0
 
-    def __init__(self, pso_hyperparameters: dc.PSOHyperparameters,
-                ccd_hyperparameters: dc.CCDHyperparameters, domain_data: dc.DomainData,
-                function: any, seed: int = int(time.time())):
+    def __init__(self, 
+        pso_hyperparameters: dc.PSOHyperparameters,
+        ccd_hyperparameters: dc.CCDHyperparameters, 
+        domain_data: dc.DomainData,
+        function: any,
+        pso_configs: dc.PSOConfig = dc.PSOConfig()
+    ):
         
-        np.random.seed(seed)
+        np.random.seed(pso_configs.seed)
 
         self.pso_hypers = pso_hyperparameters
         if not self.pso_hypers.has_valid_learning_params():
@@ -68,8 +108,9 @@ class PSOData:
         
         self.domain_data = domain_data
 
+        self.pso_configs = pso_configs
+
         self.function = function
-        self.seed = seed
         self.g_best = None
 
     def initialize(self):
@@ -96,7 +137,7 @@ class PSOData:
         # Store the output value of past g_bests for the second terminating condition.  Multiplies a ones array by the maximum possible value
         # So that comparison starts out always being true.
         self.old_g_best = np.finfo(p.DTYPE).max*np.ones(self.pso_hypers.mv_iteration, dtype=p.DTYPE)
-        self.iterations = 0
+        self.iteration = 0
 
     def update(self) -> bool:
         """
@@ -147,27 +188,27 @@ class PSOData:
         self.old_g_best = np.roll(self.old_g_best, 1)
         self.old_g_best[0] = self.g_best[-1]
 
-        self.iterations += 1
+        self.iteration += 1
 
         return self.should_terminate()
     
-    def CCD(self) -> p.ADTYPE:
+    def CCD(self):
         """Run CCD by taking g_best as a main input, and refining it"""
         ccd_hypers = self.ccd_hypers
-        return (ccd.CCD(
-                initial=self.g_best, 
-                lb = self.domain_data.lower_bound, 
-                ub = self.domain_data.upper_bound,
-                alpha = ccd_hypers.ccd_alpha, 
-                tol = ccd_hypers.ccd_tol, 
-                max_its = ccd_hypers.ccd_max_its,
-                third_term_its = ccd_hypers.ccd_third_term_its, 
-                func=self.function)
+        self.g_best = ccd.CCD(
+            initial=self.g_best, 
+            lb = self.domain_data.lower_bound, 
+            ub = self.domain_data.upper_bound,
+            alpha = ccd_hypers.ccd_alpha, 
+            tol = ccd_hypers.ccd_tol, 
+            max_its = ccd_hypers.ccd_max_its,
+            third_term_its = ccd_hypers.ccd_third_term_its, 
+            func=self.function
         )
 
     def should_terminate(self) -> bool:
         """Helper function which determines if the instance should terminate"""
-        return self.iterations >= self.pso_hypers.max_iterations or self.second_termination()
+        return self.iteration >= self.pso_hypers.max_iterations or self.second_termination()
     
     def second_termination(self) -> bool:
         """Second termination criteria, specified in document on page 7"""
@@ -178,45 +219,50 @@ class PSOData:
     def set_g_best(self, g_best: p.ADTYPE) -> None:
         """Set the g_best for this object"""
         self.g_best = g_best
-    
-@dataclass
-class PSOLoggerConfig:
-    """
-    Settings for the PSOLogger class.
-    """
-    should_log: bool = False
-    track_pos_matrix: bool = True
-    track_vel_matrix: bool = True
-    track_pbest_matrix: bool = True
-    notes: str = ""
 
+    def get_g_best_coords(self) -> p.ADTYPE
+    
 class PSOLogger:
     """
     Wrapper for the PSO object, that enables logging.
+
+    Notes about the dataframe:
+    - For pso_iteration, if it contains a -1, it means that it is recording a CCD value
     """    
     pso: PSOData = None
-    config: PSOLoggerConfig
+    config: dc.PSOLoggerConfig
     mpso_iterations: int = 0
+    df: pd.DataFrame
+    current_rows = []
 
-    def __init__(self, pso: PSOData, config: PSOLoggerConfig = PSOLoggerConfig()):
+    def __init__(self, pso: PSOData, config: dc.PSOLoggerConfig = dc.PSOLoggerConfig()):
         self.pso = pso
         self.config = config
         self.mpso_iterations = 0
-        self.df = pd.DataFrame()
+
+        columns = ["mpso_iteration", "pso_iteration", "g_best_coords", "g_best_value"]
+
+        self.df = pd.DataFrame(columns=columns)
     
     def initialize(self):
         self.mpso_iterations += 1
         self.pso.initialize()
         
-
     def update(self) -> bool:
         should_terminate = self.pso.update()
-        
-
+        new_row = {
+            "mpso_iteration": self.mpso_iterations,
+            "pso_iteration": self.pso.iteration,
+            "g_best_coords": u.np_to_json(self.pso.g_best[:-1]),
+            "g_best_value": self.pso.g_best[-1]
+        }
+        self.current_rows.append(new_row)
 
         return should_terminate
     
     def CCD(self) -> p.ADTYPE:
+        self.pso.
+        
         return self.pso.CCD()
     
     @property
@@ -240,7 +286,7 @@ class MPSO_CCDRunner:
     runner_settings: MPSORunnerConfigs
     runs: int
 
-    def __init__(self, pso: PSOData, runs: int = 30, logging_settings: PSOLoggerConfig = PSOLoggerConfig(),
+    def __init__(self, pso: PSOData, runs: int = 30, logging_settings: dc.PSOLoggerConfig = dc.PSOLoggerConfig(),
                  runner_settings: MPSORunnerConfigs = MPSORunnerConfigs()):
         if logging_settings.should_log:
             self.pso = PSOLogger(pso=pso, config=logging_settings)
@@ -274,7 +320,7 @@ class MPSO_CCDRunner:
 
 def test_PSO():
 
-    pso_hyperparameters = PSOHyperparameters(
+    pso_hyperparameters = dc.PSOHyperparameters(
         num_part = p.NUM_PART,
         num_dim=p.NUM_DIM, 
         alpha = p.ALPHA,
@@ -286,14 +332,14 @@ def test_PSO():
         mv_iteration=p.NO_MOVEMENT_TERMINATION
     )
 
-    ccd_hyperparameters = CCDHyperparameters(
+    ccd_hyperparameters = dc.CCDHyperparameters(
         ccd_alpha=p.CCD_ALPHA, 
         ccd_tol=p.CCD_TOL, 
         ccd_max_its=p.CCD_MAX_ITS,
         ccd_third_term_its=p.CCD_THIRD_TERM_ITS
     )
 
-    domain_data = DomainData(
+    domain_data = dc.DomainData(
         upper_bound = p.UPPER_BOUND,
         lower_bound = p.LOWER_BOUND
     )
@@ -311,7 +357,7 @@ def test_PSO():
         function = function
     )
 
-    logging_settings = PSOLoggerConfig(
+    logging_settings = dc.PSOLoggerConfig(
         should_log=True
     )
 

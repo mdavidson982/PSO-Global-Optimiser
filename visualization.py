@@ -231,7 +231,7 @@ class Visualization:
     def update_gbest_iterations(self):
         self.root.update_idletasks()
         
-        self.g_best_history = np.hstack((self.g_best_history, np.array([self.pso.iterations, self.pso.g_best[-1]]).reshape(-1, 1)))
+        self.g_best_history = np.hstack((self.g_best_history, np.array([self.pso.iteration, self.pso.g_best[-1]]).reshape(-1, 1)))
         self.g_best_chart.clear()
         self.g_best_chart.plot(self.g_best_history[c.XDIM], self.g_best_history[c.YDIM])
 
