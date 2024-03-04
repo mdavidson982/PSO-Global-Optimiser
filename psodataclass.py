@@ -2,6 +2,8 @@ from dataclasses import dataclass
 import json
 import parameters as p
 import numpy as np
+import time
+import enum
 
 
 @dataclass
@@ -9,7 +11,7 @@ class PSOConfig:
     """Class which holds any configurations for PSO besides hyperparameters, domain data etc.
     seed:               seed which is used to generate random numbers.
     """
-    seed: int = 
+    seed: int = int(time.time())
     
 @dataclass        
 class PSOHyperparameters:
@@ -164,13 +166,17 @@ class IterationData:
     iteration_g_best: p.ADTYPE
     old_g_bests: p.ADTYPE
 
+class PSOLogTypes(enum.Enum):
+    NO_LOG = 0
+    QUALITY = 1
+    TIME = 2
     
 @dataclass
 class PSOLoggerConfig:
     """
     Settings for the PSOLogger class.
     """
-    should_log: bool = False
+    log_type: PSOLogTypes = PSOLogTypes.NO_LOG
     track_pos_matrix: bool = True
     track_vel_matrix: bool = True
     track_pbest_matrix: bool = True

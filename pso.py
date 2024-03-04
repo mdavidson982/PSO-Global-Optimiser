@@ -9,7 +9,6 @@ import pandas as pd
 import psodataclass as dc
 from dataclasses import dataclass
 import util as u
-import json
 
 #initialization variables
 #calls the initialization function in the initializer.py. 
@@ -220,9 +219,18 @@ class PSOData:
         """Set the g_best for this object"""
         self.g_best = g_best
 
-    def get_g_best_coords(self) -> p.ADTYPE
+    def get_g_best_coords(self) -> p.ADTYPE:
+        return self.g_best[:-1]
     
-class PSOLogger:
+    def get_g_best_value(self) -> p.DTYPE:
+        return self.g_best[-1]
+    
+class PSOTimeLogger:
+
+    def __init__(self):
+        raise Exception("Unimplemented")
+    
+class PSOQualityLogger:
     """
     Wrapper for the PSO object, that enables logging.
 
@@ -250,20 +258,20 @@ class PSOLogger:
         
     def update(self) -> bool:
         should_terminate = self.pso.update()
-        new_row = {
-            "mpso_iteration": self.mpso_iterations,
-            "pso_iteration": self.pso.iteration,
-            "g_best_coords": u.np_to_json(self.pso.g_best[:-1]),
-            "g_best_value": self.pso.g_best[-1]
-        }
-        self.current_rows.append(new_row)
 
         return should_terminate
     
-    def CCD(self) -> p.ADTYPE:
-        self.pso.
+    def CCD(self):
+        self.pso.CCD()
+        new_row = {
+            "mpso_iteration": self.mpso_iterations,
+            "pso_iteration": self.pso.iteration,
+            "g_best_coords": u.np_to_json(self.pso.get_g_best_coords()),
+            "g_best_value": self.pso.get_g_best_value()
+        }
+        self.current_rows.append(new_row)
         
-        return self.pso.CCD()
+        return 
     
     @property
     def g_best(self):
@@ -288,10 +296,14 @@ class MPSO_CCDRunner:
 
     def __init__(self, pso: PSOData, runs: int = 30, logging_settings: dc.PSOLoggerConfig = dc.PSOLoggerConfig(),
                  runner_settings: MPSORunnerConfigs = MPSORunnerConfigs()):
-        if logging_settings.should_log:
-            self.pso = PSOLogger(pso=pso, config=logging_settings)
-        else:
+        if logging_settings.log_type == dc.PSOLogTypes.NO_LOG:
             self.pso = pso
+        elif logging_settings.log_type == dc.PSOLogTypes.QUALITY:
+            self.pso = PSOQualityLogger(pso=pso, config=logging_settings)
+        elif logging_settings.log_type == dc.PSOLogTypes.TIME:
+            self.pso = PSOTimeLogger()
+        else:
+            raise Exception("Not a valid type")
 
         self.runner_settings = runner_settings
         self.runs = runs
@@ -310,6 +322,7 @@ class MPSO_CCDRunner:
         """Runs PSO with CCD"""
         start = time.time()
 
+        # Run MPSO
         for _ in range(self.runs):
             self.run_PSO()
             if self.runner_settings.use_ccd:
