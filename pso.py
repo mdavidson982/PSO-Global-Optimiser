@@ -3,7 +3,7 @@ import psofuncts.initializer as ini
 import parameters as p
 import psofuncts.update as up
 import testfuncts as tf
-import ccd
+import psofuncts.ccd as ccd
 import time
 import pandas as pd
 import psodataclass as dc

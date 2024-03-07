@@ -21,7 +21,7 @@ def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE,
     # CCD should be performed forwards, backwards, backwards, then forwards.  See manual for more details.
     l1 = list(range(q.size))
     l2 = list(reversed(l1))
-    l1 = l1 + l2 + l2 + l1
+    l1 = np.array(l1 + l2 + l2 + l1)
 
     # Helper function which fixes all but the ith coordinate in place, and performs the objective function.
     def _fn(x, dim):
