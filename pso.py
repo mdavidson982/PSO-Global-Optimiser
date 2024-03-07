@@ -1,7 +1,7 @@
 import numpy as np
-import initializer as ini
+import psofuncts.initializer as ini
 import parameters as p
-import update as up
+import psofuncts.update as up
 import testfuncts as tf
 import ccd
 import time
@@ -233,9 +233,6 @@ class PSOTimeLogger:
 class PSOQualityLogger:
     """
     Wrapper for the PSO object, that enables logging.
-
-    Notes about the dataframe:
-    - For pso_iteration, if it contains a -1, it means that it is recording a CCD value
     """    
     pso: PSOData = None
     config: dc.PSOLoggerConfig
@@ -243,14 +240,14 @@ class PSOQualityLogger:
     df: pd.DataFrame
     current_rows = []
 
+    columns = ["mpso_iteration", "pso_iteration", "g_best_coords", "g_best_value"]
+
     def __init__(self, pso: PSOData, config: dc.PSOLoggerConfig = dc.PSOLoggerConfig()):
         self.pso = pso
         self.config = config
         self.mpso_iterations = 0
 
-        columns = ["mpso_iteration", "pso_iteration", "g_best_coords", "g_best_value"]
-
-        self.df = pd.DataFrame(columns=columns)
+        self.df = pd.DataFrame(columns=PSOQualityLogger.columns)
     
     def initialize(self):
         self.mpso_iterations += 1
@@ -258,7 +255,6 @@ class PSOQualityLogger:
         
     def update(self) -> bool:
         should_terminate = self.pso.update()
-
         return should_terminate
     
     def CCD(self):

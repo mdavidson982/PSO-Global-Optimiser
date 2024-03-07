@@ -1,12 +1,7 @@
 import numpy as np
 import parameters as p
-#Private Function. Really Shouldn't be used.
-#This is used in place of the equation we will be optimizing.
-#This will be changed out for some other hardcoded equation down the line. Right now, this is just a place holder
-def _Default(array: p.ADTYPE) -> p.DTYPE:
-    return 1 
 
-def update_p_best(pos_matrix: p.ADTYPE, past_p_best: p.ADTYPE, function = _Default) -> p.ADTYPE:
+def update_p_best(pos_matrix: p.ADTYPE, past_p_best: p.ADTYPE, function) -> p.ADTYPE:
     """Updates the personal best for each particle in each iteration (if the updated value is smaller than the previous value).
     This is completed by peforming the optimization function on each particle
 
@@ -33,7 +28,7 @@ def update_g_best(p_best: p.ADTYPE) -> p.ADTYPE:
 
 
 def update_velocity(v_part: p.ADTYPE, x_pos: p.ADTYPE, g_best: p.ADTYPE, 
-                    p_best: p.ADTYPE, w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE):
+                    p_best: p.ADTYPE, w: p.DTYPE, c1: p.DTYPE, c2: p.DTYPE) -> p.ADTYPE:
     """Updates the velocity for each particle in each dimmension
     v_part: ndarray that represents the current velocities for each dimmention of a particle
     x_pos: ndarray that reperesents the current position of the particle
@@ -47,24 +42,23 @@ def update_velocity(v_part: p.ADTYPE, x_pos: p.ADTYPE, g_best: p.ADTYPE,
     #Randomness variables. Returns values between 0 and 1.
     #Random movement influence. Technically not necessary but the random movement values
     #Make the movement for each particle more 'natural'
-    num_dim = x_pos.shape[0]
-    num_col = x_pos.shape[1]
-    r1 = np.random.rand(num_dim, num_col)
-    r2 = np.random.rand(num_dim, num_col)
+    num_part = x_pos.shape[1]
+    r1 = np.random.rand(num_part)
+    r2 = np.random.rand(num_part)
 
     #Update Velocity Formula
     #v_part * w: Inertia term. It allows particles to retain some of their previous velocity
     #r1 * c1 * (x_pos - p_best[:-1]): Personal Cognitive Component. Pulls the particle towards the personal best (p_best) position
     #r2 * c2 * (x_pos - g_best[:-1, np.newaxis]): Global Cognitive Component. Pulls the partivle towards the global best position
-    v_part = v_part*w + r1*c1*(p_best[:-1]-x_pos) + r2*c2*(g_best[:-1, np.newaxis]-x_pos)
+    v_part = v_part*w + r1[:, np.newaxis]*c1*(p_best[:-1]-x_pos) + r2[:, np.newaxis]*c2*(g_best[:-1, np.newaxis]-x_pos)
     return v_part
 
-def update_position(x_pos: p.ADTYPE, v_part: p.ADTYPE):
+def update_position(x_pos: p.ADTYPE, v_part: p.ADTYPE) -> p.ADTYPE:
     """Updates the position of a particle by adding the velocity to the position for each dimmension
     returns an updated position ndarray"""
     return x_pos + v_part
 
-def verify_bounds(upper_bounds: p.ADTYPE, lower_bounds: p.ADTYPE, matrix: p.ADTYPE):
+def verify_bounds(upper_bounds: p.ADTYPE, lower_bounds: p.ADTYPE, matrix: p.ADTYPE) -> p.ADTYPE:
 
     """The following function verifies that the matrix does not exceed the upper or lower bound dimensions. 
     Here's an example of constraining both Max and Min:

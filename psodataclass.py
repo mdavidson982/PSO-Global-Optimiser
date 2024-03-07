@@ -5,7 +5,6 @@ import numpy as np
 import time
 import enum
 
-
 @dataclass
 class PSOConfig:
     """Class which holds any configurations for PSO besides hyperparameters, domain data etc.
@@ -70,7 +69,6 @@ class PSOHyperparameters:
         dict = json.loads(json_data)
         return cls(**dict)
     
-
 @dataclass    
 class CCDHyperparameters:
     """

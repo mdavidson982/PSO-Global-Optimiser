@@ -1,5 +1,5 @@
 import numpy as np
-import update as up
+import psofuncts.update as up
 import parameters as p
 
 
@@ -46,11 +46,11 @@ def initializer(num_part: int, num_dim: int, alpha: p.DTYPE,
     # The distances row contains the distances for each particle's p_best.  It is used to keep track of
     # Results so no recalculation is needed.  It is initialized at the max value, so that when the function
     # Is evaluated for the first time it properly updates
-    distances_row = np.ones((1, num_part), dtype=p.DTYPE)
-    distances_row *= np.finfo(p.DTYPE).max
+    evaluation_row = np.ones((1, num_part), dtype=p.DTYPE)
+    evaluation_row *= np.finfo(p.DTYPE).max
 
     # Let the personal best be the current position.
-    p_best = np.vstack((pos_matrix, distances_row), dtype=p.DTYPE)
+    p_best = np.vstack((pos_matrix, evaluation_row), dtype=p.DTYPE)
     p_best = up.update_p_best(pos_matrix=pos_matrix, past_p_best=p_best, function=function)
 
     g_best = up.update_g_best(p_best=p_best)
