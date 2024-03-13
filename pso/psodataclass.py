@@ -71,28 +71,6 @@ class PSOHyperparameters(Dataclass):
             return False
         return True
     
-    def to_json(self):
-        return json.dumps(self.__dict__)
-    
-    def to_json_file(self, file: str | TextIOWrapper):
-        if type(file) == str:
-            with open(file, "w+") as file:
-                json.dump(self.__dict__, file)
-        else:
-            json.dump(self.__dict__, file)
-    
-    @classmethod
-    def from_json(cls, json_data):
-        dict = json.loads(json_data)
-        return cls(**dict)
-    
-    @classmethod
-    def from_json_file(cls, file: str | TextIOWrapper):
-        if type(file) == str:
-            with open(file, "r")  as file:
-                return cls(**json.load(file))
-        else:
-            return cls(**json.load(file))
 @dataclass    
 class CCDHyperparameters(Dataclass):
     """
@@ -120,14 +98,7 @@ class CCDHyperparameters(Dataclass):
             return False
         return True
     
-    def to_json(self):
-        return json.dumps(self.__dict__)
-    
-    @classmethod
-    def from_json(cls, json_data):
-        dict = json.loads(json_data)
-        return cls(**dict)
-    
+@dataclass
 class DomainData(Dataclass):
     """
     Class that holds information about the objective function's
@@ -139,28 +110,6 @@ class DomainData(Dataclass):
     """
     upper_bound: p.ADTYPE
     lower_bound: p.ADTYPE
-    v_max: p.ADTYPE
-
-    def __init__(self, upper_bound: p.ADTYPE, lower_bound: p.ADTYPE):
-        self.upper_bound = upper_bound
-        self.lower_bound = lower_bound
-
-    def to_json(self):
-        dict = self.__dict__
-        for key, value in dict.items():
-            if type(value) is np.ndarray:
-                dict[key] = value.tolist()
-        return json.dumps(self.__dict__)
-    
-    @classmethod
-    def from_json(cls, json_data):
-        ndarray_keys = ["upper_bound", "lower_bound", "v_max"]
-
-        dictionary = json.loads(json_data)
-        for key, value in dict.items():
-            if key in ndarray_keys:
-                dictionary[key] = np.array(value)
-        return cls(**dictionary)
     
     @classmethod
     def decode_json_hooks(cls):
@@ -171,7 +120,6 @@ class DomainData(Dataclass):
         return {
             "upper_bound": np.array,
             "lower_bound": np.array,
-            "v_max": np.array
         }
 
 @dataclass
@@ -230,4 +178,3 @@ class PSOLoggerConfig(Dataclass):
 class MPSORunnerConfigs(Dataclass):
     """Class which defines the configurations for the MPSO Runner"""
     use_ccd: bool = True
-

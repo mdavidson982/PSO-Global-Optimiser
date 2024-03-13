@@ -80,6 +80,7 @@ class PSO:
     domain_data: dc.DomainData
     pso_configs: dc.PSOConfig
     function: any
+    v_max: p.ADTYPE
     pos_matrix: p.ADTYPE
     vel_matrix: p.ADTYPE
     p_best: p.ADTYPE
@@ -126,7 +127,7 @@ class PSO:
         self.pos_matrix = pos_matrix
         self.vel_matrix = vel_matrix
         self.p_best = p_best
-        self.domain_data.v_max = v_max
+        self.v_max = v_max
         
         # If the previously recorded g_best from another run is better than the current g_best, keep it.
         # Otherwise, replace.
@@ -153,8 +154,8 @@ class PSO:
         )
         
         self.vel_matrix = up.verify_bounds(
-            upper_bounds = self.domain_data.v_max, 
-            lower_bounds = -self.domain_data.v_max, 
+            upper_bounds = self.v_max, 
+            lower_bounds = -self.v_max, 
             matrix = self.vel_matrix
         )
         

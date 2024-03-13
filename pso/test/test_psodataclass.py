@@ -1,13 +1,11 @@
-from .. import psodataclass as pdc, codec
+from .. import psodataclass as dc, codec
 import unittest
 import logging
 import numpy as np
 import os
 
-
 _JSON_PATH = os.path.join(".", "pso", "test", "json", "")
 _JSON_TEMP_PATH = os.path.join(_JSON_PATH, "temp", "")
-print(_JSON_TEMP_PATH)
 
 class DataTester(unittest.TestCase):
     """Base class for the other testing classes"""
@@ -21,17 +19,37 @@ class DataTester(unittest.TestCase):
         self.reset_seed()
         return super().setUp()
     
-class PSOHyperparametersTester(DataTester):
-    def test_serialize(self):
+    @classmethod
+    def setUpClass(cls) -> None:
+        # Clean up any old files in the temp directory
+        logging.info("Removing files in temp directory")
+        for item in os.listdir(_JSON_TEMP_PATH):
+            os.remove(f"{_JSON_TEMP_PATH}{item}")
+    
+class PSOCodecTester(DataTester):
+    """Checks that the codec json serialization/deserialization works as intended"""
+    def check_equals(self, expected, real):
+        """Helper function to determine if two classes """
+        # Make sure that the list of keys is the same first
+        self.assertEqual(type(expected), type(real))
+        self.assertEqual(list(expected.__dict__.keys()), list(real.__dict__.keys()))
 
-        json_name = "PSOHyperparameterstest.json"
+        # Test every key value in pair in the test and expected to make sure they are the same, 
+        # and no loss has occurred during Serialization
+        test_dict = real.__dict__
+        expec_dict = expected.__dict__
+        for key, value in test_dict.items():
+            if type(value) == np.ndarray:
+                np.testing.assert_array_almost_equal(test_dict[key], expec_dict[key], 8)
+            else:
+                self.assertAlmostEqual(test_dict[key], expec_dict[key], 8)
+
+    def test_hparams_codec(self):
+        """Test that the codec can serialize and deserialize objects successfully"""
+        json_name = "PSOCodecHparamsTest.json"
         file_path = f"{_JSON_TEMP_PATH}{json_name}"
 
-        if os.path.exists(file_path):
-            logging.info(f"Removing {json_name}")
-            os.remove(file_path)
-
-        expected_hparams = pdc.PSOHyperparameters(
+        expected_hparams = dc.PSOHyperparameters(
             num_part = 1,
             num_dim = 2,
             alpha = 0.3,
@@ -43,45 +61,66 @@ class PSOHyperparametersTester(DataTester):
             max_iterations = 100
         )
 
-        upper_bound = np.ones(5)
-        lower_bound = np.ones(5)*-1
+        # Check regular serialization works
+        hparams_jsonized = codec.dataclass_to_json(expected_hparams)
+        unjsonized_hparams = codec.json_to_dataclass(hparams_jsonized, dc.PSOHyperparameters)
+        self.check_equals(expected_hparams, unjsonized_hparams)
 
-        expected_domaindata = pdc.DomainData(
+        # Check that the json can be written to and retrieved from file
+        with open(file_path, "w+") as file:
+            codec.dataclass_to_json_file(expected_hparams, file)
+
+        with open(file_path, "r") as file:
+            file_unjsonized_hparams = codec.json_file_to_dataclass(file, dc.PSOHyperparameters)
+        self.check_equals(expected_hparams, file_unjsonized_hparams)
+
+
+    def test_domain_codec(self):
+        """
+        Check that domain, which uses numpy arrays, is able to be fully serialized to and from a string, and from a file
+        """
+        json_name = "PSOCodecDomainTest.json"
+        file_path = f"{_JSON_TEMP_PATH}{json_name}"
+
+        # Check a more difficult case, like DomainData, which has np arrays (more difficult to jsonize)
+        # NOTE the values used below should not be used as a basis for constructing mpso instances
+        upper_bound = np.ones(shape=(5, 2))
+        lower_bound = np.ones(5)*-1
+        expected_domaindata = dc.DomainData(
             upper_bound=upper_bound,
             lower_bound=lower_bound
         )
 
-        s = codec.dataclass_to_json(expected_hparams)
-        print(s)
-        z = codec.json_to_dataclass(s, pdc.PSOHyperparameters)
-        print(z)
+        # Check regular serialization works
+        domaindata_jsonized = codec.dataclass_to_json(expected_domaindata)
+        unjsonized_domaindata = codec.json_to_dataclass(domaindata_jsonized, dc.DomainData)
+        self.check_equals(expected_domaindata, unjsonized_domaindata)
 
-        s = codec.dataclass_to_json(expected_domaindata)
-        print(s)
-        z = codec.json_to_dataclass(s, pdc.DomainData)
-        print(z)
+        # Check that the json can be written to and retrieved from file
+        with open(file_path, "w+") as file:
+            codec.dataclass_to_json_file(expected_domaindata, file)
+        with open(file_path, "r") as file:
+            file_unjsonized_domaindata = codec.json_file_to_dataclass(file, dc.DomainData)
+        self.check_equals(expected_domaindata, file_unjsonized_domaindata)
 
-        """
-        expected_hparams.to_json_file(file_path)
+    def test_read_in(self):
+        file_names = [(file_name[0]+".json", file_name[1]) for file_name in [
+            ("ccdparams", dc.CCDHyperparameters),
+            ("domain", dc.DomainData),
+            ("hparams", dc.PSOHyperparameters),
+            ("loggerconfig", dc.PSOLoggerConfig),
+            ("mpsoconfig", dc.MPSORunnerConfigs),
+            ("psoconfig", dc.PSOConfig),
+        ]]
 
-        # Load the json file that we made
-        test_hparams = pdc.PSOHyperparameters.from_json_file(file_path)
-
-        # Make sure that the list of keys is the same first
-        self.assertEqual(list(expected_hparams.__dict__.keys()), list(test_hparams.__dict__.keys()))
-
-        # Test every key value in pair in the test and expected to make sure they are the same, 
-        # and no loss has occurred during Serialization
-        test_dict = test_hparams.__dict__
-        expec_dict = expected_hparams.__dict__
-        for key in test_dict:
-            self.assertAlmostEqual(test_dict[key], expec_dict[key])
-        """
-        
-
-
-
-
+        # Try to read in all of the json files in the json folder,
+        # and deserialize to their respective types
+        for file_data in file_names:
+            with open(f"{_JSON_PATH}{file_data[0]}", "r") as file:
+                dataclass = codec.json_file_to_dataclass(file, file_data[1])
+                logging.info(f"Constructed {file_data[1].__name__}")
+                logging.info(f"Contents: {dataclass.__dict__}\n")
+                
 
 if __name__ == "__main__":
     unittest.main()

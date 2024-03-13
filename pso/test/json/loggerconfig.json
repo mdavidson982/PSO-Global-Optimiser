@@ -1,0 +1,7 @@
+{
+    "log_type": 0,
+    "track_pos_matrix": true,
+    "track_vel_matrix": false,
+    "track_pbest_matrix": true,
+    "notes": "no notes"
+}
