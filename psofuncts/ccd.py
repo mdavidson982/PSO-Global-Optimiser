@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import optimize
-import parameters as p
+import utils.parameters as p
 import time
 
 def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE, 

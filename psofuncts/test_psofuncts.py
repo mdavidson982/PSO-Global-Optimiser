@@ -1,5 +1,5 @@
 import unittest
-from . import initializer, update
+from . import initializer, update, ccd
 import logging
 import numpy as np
 import testfuncts as tf
@@ -173,8 +173,8 @@ class PSOUpdater(PSOTester):
         )
 
         v_part = np.array((
-            (-2.17560176, -2.24599521),
-            (-2.17803394, -2.32510083)
+            (-2.17560176, -2.46008066),
+            (-1.98710056, -2.32510083)
         ))
 
         np.testing.assert_array_almost_equal(v_part_test, v_part, 8)
@@ -216,6 +216,29 @@ class PSOUpdater(PSOTester):
         matrix_test = update.verify_bounds(matrix=matrix, upper_bounds=upper_bounds, lower_bounds=lower_bounds)
 
         np.testing.assert_array_almost_equal(matrix_test, expected_matrix)
+
+class CCDTester(PSOTester):
+    def test_ccd(self):
+        dim = 30
+        ub = np.ones(dim)*100
+        lb = -1*ub
+        initial = np.random.rand(dim)*(ub - lb) + lb
+        optimum = np.zeros(dim)
+        initial = np.append(initial, 0)
+        test_func = tf.TestFuncts.generate_function("rosenbrock", optimum, bias=0)
+        ccd_test = ccd.CCD(initial, lb, ub, alpha = 0.2, tol=0.0001, max_its = 20, third_term_its = 6, func = test_func)
+        
+        ccd_expected = np.array((7.51128284e-10, 1.46210307e-09, 2.78059842e-09, 5.41143455e-09,
+            1.09594394e-08, 2.21391735e-08, 4.44186325e-08, 8.91780998e-08,
+            1.78776744e-07, 3.58512067e-07, 7.18774870e-07, 1.44131185e-06,
+            2.89022089e-06, 5.79582528e-06, 1.16225588e-05, 2.33073921e-05,
+            4.67399175e-05, 9.37316931e-05, 1.87972933e-04, 3.76985597e-04,
+            7.56127576e-04, 1.51686804e-03, 3.04414348e-03, 6.11381647e-03,
+            1.22976337e-02, 2.48118927e-02, 5.03702848e-02, 1.03538553e-01,
+            2.18312178e-01, 4.84284570e-01, 6.17697642e-02))
+        
+        np.testing.assert_array_almost_equal(ccd_test, ccd_expected, 8)
+
 
     
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 "various utility functions that have no other home for PSO"
 
-import parameters as p
+import utils.parameters as p
 import numpy as np
-import consts as c
+import utils.consts as c
 import os
 import time
 import json
@@ -77,42 +77,3 @@ def make_tempfile_path() -> str:
 
 """Below are functions used to test projections"""
 
-def test_scale():
-    
-    test_lb = np.array((-1, -3), dtype = p.DTYPE)
-    test_ub = np.array((5, 8), dtype=p.DTYPE)
-    array = np.random.rand(2, 5)
-    print(scale(test_lb, test_ub, array))
-
-def test_descale():
-    test_lb = np.array((-1, -3), dtype = p.DTYPE)
-    test_ub = np.array((5, 8), dtype=p.DTYPE)
-    array=np.array(((4.29238699,  4.94183464,  4.01325885,  4.43113782,  4.09668852),
-                    (-2.16691134,  5.27488954, 5.05971429,  4.89988192,  2.01928249)), dtype=p.DTYPE)
-
-def test_project():
-    test_old_lb = np.array((-5, -4))
-    test_old_ub = np.array((5, 4))
-
-    test_new_lb = np.array((10, 8))
-    test_new_ub = np.array((20, 16))
-
-    array = np.random.rand(2, 5)
-    array = scale(test_old_lb, test_old_ub, array)
-
-    print(array)
-    print(project(test_old_lb, test_old_ub, test_new_lb, test_new_ub, array))
-
-def test_scale_singledim():
-    array = np.random.rand(2)
-    test_lb = np.array((-1, -3), dtype = p.DTYPE)
-    test_ub = np.array((5, 8), dtype=p.DTYPE)
-
-    print(array)
-    print(scale(test_lb, test_ub, array))
-
-def test_descale():
-    test_lb = np.array((-1, -3), dtype = p.DTYPE)
-    test_ub = np.array((5, 8), dtype=p.DTYPE)
-    array=np.array((-0.5, 7))
-    print(descale(test_lb, test_ub, array))

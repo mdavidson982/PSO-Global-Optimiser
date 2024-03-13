@@ -3,7 +3,7 @@ import testfuncts
 import numpy as np
 import pandas as pd
 import time
-import parameters as p
+import utils.parameters as p
 from datetime import datetime
 import warnings
 import json

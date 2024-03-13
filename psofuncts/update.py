@@ -1,5 +1,5 @@
 import numpy as np
-import parameters as p
+import utils.parameters as p
 
 def update_p_best(pos_matrix: p.ADTYPE, past_p_best: p.ADTYPE, function) -> p.ADTYPE:
     """Updates the personal best for each particle in each iteration (if the updated value is smaller than the previous value).
@@ -49,8 +49,8 @@ def update_velocity(v_part: p.ADTYPE, x_pos: p.ADTYPE, g_best: p.ADTYPE,
     #Update Velocity Formula
     #v_part * w: Inertia term. It allows particles to retain some of their previous velocity
     #r1 * c1 * (x_pos - p_best[:-1]): Personal Cognitive Component. Pulls the particle towards the personal best (p_best) position
-    #r2 * c2 * (x_pos - g_best[:-1, np.newaxis]): Global Cognitive Component. Pulls the partivle towards the global best position
-    v_part = v_part*w + r1[:, np.newaxis]*c1*(p_best[:-1]-x_pos) + r2[:, np.newaxis]*c2*(g_best[:-1, np.newaxis]-x_pos)
+    #r2 * c2 * (x_pos - g_best[:-1, np.newaxis]): Global Cognitive Component. Pulls the particle towards the global best position
+    v_part = v_part*w + (r1*c1*(p_best[:-1]-x_pos)) + (r2*c2*(g_best[:-1, np.newaxis]-x_pos))
     return v_part
 
 def update_position(x_pos: p.ADTYPE, v_part: p.ADTYPE) -> p.ADTYPE:

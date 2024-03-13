@@ -1,6 +1,6 @@
 import numpy as np
 import psofuncts.update as up
-import parameters as p
+import utils.parameters as p
 
 
 def _default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:

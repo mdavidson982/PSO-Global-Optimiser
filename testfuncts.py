@@ -1,7 +1,7 @@
 import numpy as np
-import parameters as p
-import util as u
-import consts as c
+import utils.parameters as p
+import utils.util as u
+import utils.consts as c
 
 SPHEREID = 1
 SPHERESTRING = "sphere"

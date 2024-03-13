@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import json
-import parameters as p
+import utils.parameters as p
 import numpy as np
 import time
 import enum

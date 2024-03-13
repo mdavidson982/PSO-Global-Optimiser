@@ -1,6 +1,6 @@
 import numpy as np
 import psofuncts.initializer as ini
-import parameters as p
+import utils.parameters as p
 import psofuncts.update as up
 import testfuncts as tf
 import psofuncts.ccd as ccd
@@ -8,7 +8,7 @@ import time
 import pandas as pd
 import psodataclass as dc
 from dataclasses import dataclass
-import util as u
+import utils.util as u
 
 #initialization variables
 #calls the initialization function in the initializer.py. 
@@ -54,7 +54,7 @@ class PSOInterface:
         pass
 
 @dataclass
-class PSOData:
+class PSO:
     """
     Holds the data that PSO uses to run its algorithm
 
@@ -234,7 +234,7 @@ class PSOQualityLogger:
     """
     Wrapper for the PSO object, that enables logging.
     """    
-    pso: PSOData = None
+    pso: PSO = None
     config: dc.PSOLoggerConfig
     mpso_iterations: int = 0
     df: pd.DataFrame
@@ -242,7 +242,7 @@ class PSOQualityLogger:
 
     columns = ["mpso_iteration", "pso_iteration", "g_best_coords", "g_best_value"]
 
-    def __init__(self, pso: PSOData, config: dc.PSOLoggerConfig = dc.PSOLoggerConfig()):
+    def __init__(self, pso: PSO, config: dc.PSOLoggerConfig = dc.PSOLoggerConfig()):
         self.pso = pso
         self.config = config
         self.mpso_iterations = 0
@@ -290,7 +290,7 @@ class MPSO_CCDRunner:
     runner_settings: MPSORunnerConfigs
     runs: int
 
-    def __init__(self, pso: PSOData, runs: int = 30, logging_settings: dc.PSOLoggerConfig = dc.PSOLoggerConfig(),
+    def __init__(self, pso: PSO, runs: int = 30, logging_settings: dc.PSOLoggerConfig = dc.PSOLoggerConfig(),
                  runner_settings: MPSORunnerConfigs = MPSORunnerConfigs()):
         if logging_settings.log_type == dc.PSOLogTypes.NO_LOG:
             self.pso = pso
@@ -322,8 +322,7 @@ class MPSO_CCDRunner:
         for _ in range(self.runs):
             self.run_PSO()
             if self.runner_settings.use_ccd:
-                refined_g_best = self.pso.CCD()
-                self.pso.g_best = refined_g_best
+                self.pso.CCD()
             
         print(f"it took {time.time() - start} seconds to run")
 
@@ -353,13 +352,15 @@ def test_PSO():
         lower_bound = p.LOWER_BOUND
     )
 
-    runner_config = MPSORunnerConfigs(use_ccd=True)
+    runner_config = MPSORunnerConfigs(
+        use_ccd=True
+    )
 
     optimum = optimum=p.OPTIMUM
     bias=p.BIAS,
     function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
 
-    pso = PSOData(
+    pso = PSO(
         pso_hyperparameters = pso_hyperparameters,
         ccd_hyperparameters = ccd_hyperparameters,
         domain_data = domain_data,
@@ -367,7 +368,7 @@ def test_PSO():
     )
 
     logging_settings = dc.PSOLoggerConfig(
-        should_log=True
+        log_type = dc.PSOLogTypes.NO_LOG
     )
 
     runner = MPSO_CCDRunner(
@@ -380,6 +381,7 @@ def test_PSO():
     runner.mpso_ccd()
     #runner = PSORunner(pso)
     #runner.mpso_ccd()        """Set the g_best for this object"""
+    #print(runner.pso.pso)
     print(runner.pso.g_best)
 
     
