@@ -8,10 +8,7 @@ def _default(array: np.ndarray[p.DTYPE]) -> p.DTYPE:
     _Default is used as the default optimization function in initializer, this is really for debugging.
     Ideally, we will have other functions for more complex optimization problems that will take place of default"""
 
-    #WOW the default function is used as a default input. I'm shocked!
     return 1
-
-
 
 def initializer(num_part: int, num_dim: int, alpha: p.DTYPE, 
                 upper_bound: p.ADTYPE, lower_bound: p.ADTYPE, 

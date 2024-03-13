@@ -51,7 +51,7 @@ def CCD(initial: p.DTYPE, lb: p.ADTYPE, ub: p.ADTYPE,
         
 
 def testCCD():
-    import testfuncts
+    import testfuncts.testfuncts as testfuncts
 
     dim = 30
 

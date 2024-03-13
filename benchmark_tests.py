@@ -1,5 +1,5 @@
 import pso
-import testfuncts
+import testfuncts.testfuncts as testfuncts
 import numpy as np
 import pandas as pd
 import time

@@ -2,7 +2,7 @@ import numpy as np
 import psofuncts.initializer as ini
 import utils.parameters as p
 import psofuncts.update as up
-import testfuncts as tf
+import testfuncts.testfuncts as tf
 import psofuncts.ccd as ccd
 import time
 import pandas as pd
@@ -386,7 +386,7 @@ def test_PSO():
 
     
 
-test_PSO()
+#test_PSO()
 
 
 

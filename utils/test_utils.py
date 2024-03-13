@@ -87,3 +87,6 @@ class UtilTester(unittest.TestCase):
         ), dtype=np.float64)
 
         np.testing.assert_array_almost_equal(test_project, expected_project, 8)
+
+if __name__ == "__main__":
+    unittest.main()

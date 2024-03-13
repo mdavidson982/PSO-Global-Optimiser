@@ -74,6 +74,3 @@ def clear_temp() -> None:
 def make_tempfile_path() -> str:
     """Canonical temp path for png files"""
     return os.path.join(c.TEMP_PATH, f"TEMP{time.time_ns()}")
-
-"""Below are functions used to test projections"""
-

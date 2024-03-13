@@ -1,19 +1,29 @@
 from dataclasses import dataclass
+from io import TextIOWrapper
 import json
 import utils.parameters as p
 import numpy as np
 import time
 import enum
 
+class Dataclass:
+    """Interface used for jsonization purposes"""
+    @classmethod
+    def decode_json_hooks(cls):
+        """Overwrite this function to handle fields for deserialization that may need custom options.
+        As an example, numpy arrays need special handling for jsonization, which is done in DomainData.        
+        """
+        return {}
+
 @dataclass
-class PSOConfig:
+class PSOConfig(Dataclass):
     """Class which holds any configurations for PSO besides hyperparameters, domain data etc.
     seed:               seed which is used to generate random numbers.
     """
     seed: int = int(time.time())
     
 @dataclass        
-class PSOHyperparameters:
+class PSOHyperparameters(Dataclass):
     """Class which holds PSO hyperparameters
 
     num_part:           number of particles the instance will use
@@ -31,7 +41,7 @@ class PSOHyperparameters:
 
     num_part: int
     num_dim: int
-    alpha: p.ADTYPE
+    alpha: p.DTYPE
     w: p.DTYPE
     c1: p.DTYPE
     c2: p.DTYPE
@@ -64,13 +74,27 @@ class PSOHyperparameters:
     def to_json(self):
         return json.dumps(self.__dict__)
     
+    def to_json_file(self, file: str | TextIOWrapper):
+        if type(file) == str:
+            with open(file, "w+") as file:
+                json.dump(self.__dict__, file)
+        else:
+            json.dump(self.__dict__, file)
+    
     @classmethod
     def from_json(cls, json_data):
         dict = json.loads(json_data)
         return cls(**dict)
     
+    @classmethod
+    def from_json_file(cls, file: str | TextIOWrapper):
+        if type(file) == str:
+            with open(file, "r")  as file:
+                return cls(**json.load(file))
+        else:
+            return cls(**json.load(file))
 @dataclass    
-class CCDHyperparameters:
+class CCDHyperparameters(Dataclass):
     """
     ccd_alpha:          Restricts the domain for ccd
     ccd_max_its:        Number of max iterations for ccd
@@ -104,8 +128,7 @@ class CCDHyperparameters:
         dict = json.loads(json_data)
         return cls(**dict)
     
-@dataclass
-class DomainData:
+class DomainData(Dataclass):
     """
     Class that holds information about the objective function's
     domain for PSO
@@ -138,9 +161,21 @@ class DomainData:
             if key in ndarray_keys:
                 dictionary[key] = np.array(value)
         return cls(**dictionary)
+    
+    @classmethod
+    def decode_json_hooks(cls):
+        """Jsonization hook patterns.  
+        These rules for DomainData specifically convert what would otherwise be lists to numpy arrays
+        """
+
+        return {
+            "upper_bound": np.array,
+            "lower_bound": np.array,
+            "v_max": np.array
+        }
 
 @dataclass
-class IterationData:
+class IterationData(Dataclass):
     """
     Class that holds information about a specific iteration of PSO
 
@@ -164,13 +199,24 @@ class IterationData:
     iteration_g_best: p.ADTYPE
     old_g_bests: p.ADTYPE
 
+    @classmethod
+    def decode_json_hooks(cls):
+        return {
+            "pos_matrix": np.array,
+            "vel_matrix": np.array,
+            "p_best": np.array,
+            "recorded_g_best": np.array,
+            "iteration_g_best": np.array,
+            "old_g_bests": np.array
+        }
+
 class PSOLogTypes(enum.Enum):
     NO_LOG = 0
     QUALITY = 1
     TIME = 2
     
 @dataclass
-class PSOLoggerConfig:
+class PSOLoggerConfig(Dataclass):
     """
     Settings for the PSOLogger class.
     """
@@ -181,6 +227,7 @@ class PSOLoggerConfig:
     notes: str = ""
 
 @dataclass
-class MPSORunnerConfigs:
+class MPSORunnerConfigs(Dataclass):
     """Class which defines the configurations for the MPSO Runner"""
     use_ccd: bool = True
+
