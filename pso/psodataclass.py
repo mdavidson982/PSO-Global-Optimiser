@@ -1,29 +1,38 @@
 from dataclasses import dataclass
-from io import TextIOWrapper
-import json
 import utils.parameters as p
 import numpy as np
 import time
 import enum
+from typing import get_origin
 
-class Dataclass:
-    """Interface used for jsonization purposes"""
-    @classmethod
-    def decode_json_hooks(cls):
-        """Overwrite this function to handle fields for deserialization that may need custom options.
-        As an example, numpy arrays need special handling for jsonization, which is done in DomainData.        
-        """
-        return {}
+# This array will get filled in by the PsoDataClass from below
+DATACLASSES = []
 
+def PsoDataClass(cls):
+    """Decorator used to add information to the decoding registry for a given class."""
+    decode_json_hooks = {}
+    """Detect if any special decoding needs to take place"""
+    for key, value in cls.__annotations__.items():
+        # Case 1: np arrays get converted to lists during jsonization.  If a field exists in a class
+        # That is an np array, make sure that it is converted back to a numpy array.
+        if get_origin(value) == np.ndarray: 
+            decode_json_hooks[key] = np.array
+
+    setattr(cls, "decode_json_hooks", decode_json_hooks)
+    DATACLASSES.append(cls) # Add this specific 
+    return cls
+
+@PsoDataClass
 @dataclass
-class PSOConfig(Dataclass):
+class PSOConfig:
     """Class which holds any configurations for PSO besides hyperparameters, domain data etc.
     seed:               seed which is used to generate random numbers.
     """
     seed: int = int(time.time())
     
+@PsoDataClass
 @dataclass        
-class PSOHyperparameters(Dataclass):
+class PSOHyperparameters:
     """Class which holds PSO hyperparameters
 
     num_part:           number of particles the instance will use
@@ -71,8 +80,9 @@ class PSOHyperparameters(Dataclass):
             return False
         return True
     
+@PsoDataClass
 @dataclass    
-class CCDHyperparameters(Dataclass):
+class CCDHyperparameters:
     """
     ccd_alpha:          Restricts the domain for ccd
     ccd_max_its:        Number of max iterations for ccd
@@ -97,9 +107,10 @@ class CCDHyperparameters(Dataclass):
         if not (self.ccd_third_term_its > 0):
             return False
         return True
-    
+
+@PsoDataClass 
 @dataclass
-class DomainData(Dataclass):
+class DomainData:
     """
     Class that holds information about the objective function's
     domain for PSO
@@ -110,20 +121,10 @@ class DomainData(Dataclass):
     """
     upper_bound: p.ADTYPE
     lower_bound: p.ADTYPE
-    
-    @classmethod
-    def decode_json_hooks(cls):
-        """Jsonization hook patterns.  
-        These rules for DomainData specifically convert what would otherwise be lists to numpy arrays
-        """
 
-        return {
-            "upper_bound": np.array,
-            "lower_bound": np.array,
-        }
-
+@PsoDataClass
 @dataclass
-class IterationData(Dataclass):
+class IterationData:
     """
     Class that holds information about a specific iteration of PSO
 
@@ -147,24 +148,14 @@ class IterationData(Dataclass):
     iteration_g_best: p.ADTYPE
     old_g_bests: p.ADTYPE
 
-    @classmethod
-    def decode_json_hooks(cls):
-        return {
-            "pos_matrix": np.array,
-            "vel_matrix": np.array,
-            "p_best": np.array,
-            "recorded_g_best": np.array,
-            "iteration_g_best": np.array,
-            "old_g_bests": np.array
-        }
-
 class PSOLogTypes(enum.Enum):
     NO_LOG = 0
     QUALITY = 1
     TIME = 2
     
+@PsoDataClass
 @dataclass
-class PSOLoggerConfig(Dataclass):
+class PSOLoggerConfig:
     """
     Settings for the PSOLogger class.
     """
@@ -174,7 +165,9 @@ class PSOLoggerConfig(Dataclass):
     track_pbest_matrix: bool = True
     notes: str = ""
 
+@PsoDataClass
 @dataclass
-class MPSORunnerConfigs(Dataclass):
+class MPSORunnerConfigs:
     """Class which defines the configurations for the MPSO Runner"""
     use_ccd: bool = True
+

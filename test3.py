@@ -1,39 +1,29 @@
-from dataclasses import dataclass
-import json 
-import numpy as np
+from typing import TypeVar
 
+T = TypeVar('T')
 
-@dataclass
-class Testing:
-    x: int
-    y: int
+def add_type_hints(cls):
+    def decorator(func):
+        setattr(cls, func.__name__, func)
+        
+        # Add type hints for the new method
+        func.__annotations__["self"] = cls
+        func.__annotations__["return"] = T
+        
+        # Add a docstring for the new method
+        if not func.__doc__:
+            func.__doc__ = "This is a dynamically added method."
+        
+        return func
+    return decorator
 
-    def to_json(self):
-        return json.dumps(self.__dict__)
-    
-    @classmethod
-    def from_json(cls, json_data):
-        dict = json.loads(json_data)
-        return cls(**dict)
+@add_type_hints
+class MyClass:
+    def new_method(self: 'MyClass', arg: str) -> str:
+        """A new dynamically added method."""
+        return f"New method called with argument: {arg}"
 
-
-def thisfunct(x: int, y: int):
-    return x + y
-
-arr1 = np.array((1, 2, 3))
-arr2 = np.array((4, 5, 6))
-arr3 = np.array((7, 8, 9))
-arr4 = np.array((10, 11))
-
-arrs = [arr1, arr2, arr3, arr4]
-
-z1 = [1, 2, 3]
-z2 = [4, 5, 6]
-
-my_dict = {k: v for k, v in zip(z1, z2)}
-print(my_dict)
-
-#print(np.array(np.meshgrid(*arrs)).T.reshape(-1, len(arrs)))
-
-for i in arr1:
-    print(i)
+# Usage
+obj = MyClass()
+result: str = obj.new_method("test")  # Type hinting will work for `result`
+obj.

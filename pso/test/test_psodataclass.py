@@ -120,6 +120,7 @@ class PSOCodecTester(DataTester):
                 dataclass = codec.json_file_to_dataclass(file, file_data[1])
                 logging.info(f"Constructed {file_data[1].__name__}")
                 logging.info(f"Contents: {dataclass.__dict__}\n")
+        
                 
 
 if __name__ == "__main__":
