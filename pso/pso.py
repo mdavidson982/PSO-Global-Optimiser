@@ -68,14 +68,9 @@ class PSO:
         if not self.pso_hypers.has_valid_learning_params():
             raise Exception("Bad learning parameters for PSO")
         
-
-        
         self.domain_data = domain_data
-
         self.pso_configs = pso_configs
-
         self.function = function
-        self.g_best = None
 
     def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Run initialization to get necessary matrices"""
@@ -273,7 +268,7 @@ class PSOInterface:
         """
         pass
 
-    def run_PSO(self) -> None:
+    def run_PSO(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Runs an instance of PSO"""
         pass
 

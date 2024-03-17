@@ -1,3 +1,9 @@
+"""
+TO RUN:
+Make sure workspace is in root directory (PSO-Global-Optimiser)
+python3 -m unittest pso/test/test_psodataclass.py
+"""
+
 from .. import psodataclass as dc, codec
 import unittest
 import logging
@@ -109,7 +115,7 @@ class PSOCodecTester(DataTester):
             ("domain", dc.DomainData),
             ("hparams", dc.PSOHyperparameters),
             ("loggerconfig", dc.PSOLoggerConfig),
-            ("mpsoconfig", dc.MPSORunnerConfigs),
+            ("mpsoconfig", dc.MPSOConfigs),
             ("psoconfig", dc.PSOConfig),
         ]]
 

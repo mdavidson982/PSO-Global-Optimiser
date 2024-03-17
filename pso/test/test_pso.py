@@ -74,3 +74,4 @@ class PSOTester(unittest.TestCase):
     def test_logger_run(self):
         logger = self.construct_logger()
         logger.run_PSO()
+        print(logger.return_results().tail())

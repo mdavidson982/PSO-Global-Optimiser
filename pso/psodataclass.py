@@ -182,7 +182,7 @@ class PSOLoggerConfig:
 
 @_PsoDataClass
 @dataclass
-class MPSORunnerConfigs:
+class MPSOConfigs:
     """
     Class which defines the configurations for the MPSO Runner
     

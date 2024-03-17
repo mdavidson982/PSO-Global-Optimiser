@@ -1,5 +1,5 @@
 {
-    "datatype": "MPSORunnerConfigs", 
+    "datatype": "MPSOConfigs", 
     "data":
     {
         "use_ccd": true
