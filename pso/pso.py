@@ -1,6 +1,7 @@
 from psofuncts.initializer import initializer
 import psofuncts.update as up
-import psodataclass as dc
+from . import psodataclass as dc
+import testfuncts.testfuncts as tf
 
 import utils.util as u
 import utils.parameters as p
@@ -43,7 +44,6 @@ class PSO:
     iterations:         current iteration of the instance
     """
     pso_hypers: dc.PSOHyperparameters
-    ccd_hypers: dc.CCDHyperparameters
     domain_data: dc.DomainData
     pso_configs: dc.PSOConfig
     function: any
@@ -57,7 +57,6 @@ class PSO:
 
     def __init__(self, 
         pso_hyperparameters: dc.PSOHyperparameters,
-        ccd_hyperparameters: dc.CCDHyperparameters, 
         domain_data: dc.DomainData,
         function: any,
         pso_configs: dc.PSOConfig = dc.PSOConfig()
@@ -69,9 +68,7 @@ class PSO:
         if not self.pso_hypers.has_valid_learning_params():
             raise Exception("Bad learning parameters for PSO")
         
-        self.ccd_hypers = ccd_hyperparameters
-        if not self.ccd_hypers.has_valid_learning_params():
-            raise Exception("Bad learning parameters for CCD")
+
         
         self.domain_data = domain_data
 
@@ -80,7 +77,7 @@ class PSO:
         self.function = function
         self.g_best = None
 
-    def initialize(self) -> None:
+    def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Run initialization to get necessary matrices"""
         pos_matrix, vel_matrix, p_best, g_best, v_max = initializer(
             num_part=self.pso_hypers.num_part, 
@@ -98,7 +95,9 @@ class PSO:
         
         # If the previously recorded g_best from another run is better than the current g_best, keep it.
         # Otherwise, replace.
-        if self.g_best is None or (g_best[-1] < self.g_best[-1]):
+        if start_g_best is not None:
+            self.g_best = start_g_best
+        else:
             self.g_best = g_best
 
         # Store the output value of past g_bests for the second terminating condition.  Multiplies a ones array by the maximum possible value
@@ -181,17 +180,16 @@ class PSO:
         """Return the value of the current gbest"""
         return self.g_best[-1]
     
-    def run_PSO(self):
-        "Runs an instance of PSO"
-        self.pso.initialize()
+    def run_PSO(self, start_g_best: p.ADTYPE | None = None):
+        """Runs an instance of PSO"""
+        self.initialize(start_g_best=start_g_best)
         shouldTerminate = False
 
         # pso.update() returns false when termination criteria have not been met,
         # and true when termination criteria have been met.
         while not shouldTerminate:
-            shouldTerminate = self.pso.update()
+            shouldTerminate = self.update()
 
-    
     @property
     def pso(self):
         return self
@@ -203,6 +201,7 @@ class PSOLogger:
     pso: PSO = None
     config: dc.PSOLoggerConfig
     rows: list[dict] = []
+    current_row = {}
 
     def __init__(self, 
         pso: PSO, 
@@ -210,37 +209,48 @@ class PSOLogger:
     ):
         self.pso = pso
         self.config = config
-        self.mpso_iterations = 0
         self.rows = []
-        self.current_row = {}
 
     def record_row(self) -> None:
+        """"""
+        current_row = {}
         if self.config.track_quality:
-            self.current_row.update({
+            current_row.update({
                 "pso_iteration": self.pso.iteration,
                 "g_best_coords": u.np_to_json(self.pso.get_g_best_coords()),
                 "g_best_value": self.pso.get_g_best_value(),
             })
         if self.config.track_time:
-            self.current_row.update({
+            current_row.update({
                 "time": time.time_ns(),
             })
-
-    def add_current_row(self) -> None:
-        self.rows.append(self.current_row)
-        self.current_row = {}
+        self.rows.append(current_row)
 
     def return_results(self) -> pd.DataFrame:
         return pd.DataFrame(self.rows)
     
-    def initialize(self) -> None:
-        self.mpso_iterations += 1
-        self.pso.initialize()
+    def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
+        """Run initialization to get necessary matrices"""
+        self.pso.initialize(start_g_best=start_g_best)
+        self.record_row()
         
     def update(self) -> bool:
+        """
+        Performs an iteration of the PSO algorithm.  Returns whether the instance should terminate.
+        """
         should_terminate = self.pso.update()
-        self.record_row(is_ccd=False)
+        self.record_row()
         return should_terminate
+    
+    def run_PSO(self, start_g_best: p.ADTYPE | None = None) -> None:
+        """Runs an instance of PSO"""
+        self.initialize(start_g_best=start_g_best)
+        shouldTerminate = False
+
+        # pso.update() returns false when termination criteria have not been met,
+        # and true when termination criteria have been met.
+        while not shouldTerminate:
+            shouldTerminate = self.update()
 
 class PSOInterface:
     """
@@ -251,7 +261,7 @@ class PSOInterface:
     set_g_best():     Set the g_best of the PSO data
     """
 
-    def initialize(self) -> None:
+    def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """
         Run initialization to get necessary matrices
         """
@@ -263,8 +273,51 @@ class PSOInterface:
         """
         pass
 
-    def run_pso(self) ->
+    def run_PSO(self) -> None:
+        """Runs an instance of PSO"""
+        pass
 
     @property
     def pso(self) -> PSO:
         pass
+
+def test_run_pso():
+    pso_hyperparameters = dc.PSOHyperparameters(
+        num_part = p.NUM_PART,
+        num_dim=p.NUM_DIM, 
+        alpha = p.ALPHA,
+        max_iterations=p.MAX_ITERATIONS, 
+        w=p.W, 
+        c1=p.C1, 
+        c2=p.C2, 
+        tolerance=p.TOLERANCE, 
+        mv_iteration=p.NO_MOVEMENT_TERMINATION
+    )
+
+    domain_data = dc.DomainData(
+        upper_bound = p.UPPER_BOUND,
+        lower_bound = p.LOWER_BOUND
+    )
+
+    optimum = optimum=p.OPTIMUM
+    bias=p.BIAS
+    
+    function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
+
+    pso = PSO(
+        pso_hyperparameters = pso_hyperparameters,
+        domain_data = domain_data,
+        function = function
+    )
+
+    logging_settings = dc.PSOLoggerConfig(
+        log_level = dc.LogLevels.NO_LOG
+    )
+
+    pso_logger = PSOLogger(
+        pso = pso,
+        config = logging_settings
+    )
+
+    pso.run_PSO()
+

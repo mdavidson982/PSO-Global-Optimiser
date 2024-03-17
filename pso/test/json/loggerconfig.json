@@ -2,7 +2,7 @@
     "datatype": "PSOLoggerConfig", 
     "data":
     {
-        "log_type": 0,
+        "log_level": 0,
         "track_time": true,
         "track_quality": true,
         "track_pos_matrix": true,

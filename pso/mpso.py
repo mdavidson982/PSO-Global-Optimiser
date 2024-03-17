@@ -3,7 +3,9 @@ from psofuncts import ccd
 
 # Non-graphical runner
 class MPSO:
-    "Runner class.  Can run PSO, 
+    """
+    Class for running MPSO
+    """
     pso: pso_file.PSOInterface #Can either be a logging instance of PSO or a non-logging
     ccd_hyperparameters: dc.CCDHyperparameters
     runner_settings: dc.MPSORunnerConfigs
@@ -15,18 +17,9 @@ class MPSO:
     ):
         self.pso = pso
         self.runner_settings = runner_settings
-        self.ccd_hyperparameters = ccd_hyperparameters
-
-    def run_PSO(self) -> bool:
-        "Runs an instance of PSO"
-        self.pso.initialize()
-        shouldTerminate = False
-
-        # pso.update() returns false when termination criteria have not been met,
-        # and true when termination criteria have been met.
-        while not shouldTerminate:
-            shouldTerminate = self.pso.update()
-
+        self.ccd_hypers = ccd_hyperparameters
+        if not self.ccd_hypers.has_valid_learning_params():
+            raise Exception("Bad learning parameters for CCD")
 
     def run_CCD(self):
         """Run CCD by taking g_best as a main input, and refining it"""

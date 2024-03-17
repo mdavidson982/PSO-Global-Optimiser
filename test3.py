@@ -23,7 +23,4 @@ class MyClass:
         """A new dynamically added method."""
         return f"New method called with argument: {arg}"
 
-# Usage
-obj = MyClass()
-result: str = obj.new_method("test")  # Type hinting will work for `result`
-obj.
+

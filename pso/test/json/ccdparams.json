@@ -1,5 +1,5 @@
 {
-"datatype": "CCDHyperparmeters", 
+"datatype": "CCDHyperparameters", 
 "data":
     {
         "ccd_alpha": 0.9,
