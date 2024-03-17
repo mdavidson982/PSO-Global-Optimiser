@@ -5,10 +5,10 @@ import time
 import enum
 from typing import get_origin
 
-# This array will get filled in by the PsoDataClass from below
-DATACLASSES = []
+# This dictionary will get filled in by the PsoDataClass from below
+DATACLASSES = {}
 
-def PsoDataClass(cls):
+def _PsoDataClass(cls):
     """Decorator used to add information to the decoding registry for a given class."""
     decode_json_hooks = {}
     """Detect if any special decoding needs to take place"""
@@ -19,10 +19,10 @@ def PsoDataClass(cls):
             decode_json_hooks[key] = np.array
 
     setattr(cls, "decode_json_hooks", decode_json_hooks)
-    DATACLASSES.append(cls) # Add this specific 
+    DATACLASSES[cls.__name__] = cls # Make a mapping between the name of the dataclass and its actuallc lass
     return cls
 
-@PsoDataClass
+@_PsoDataClass
 @dataclass
 class PSOConfig:
     """Class which holds any configurations for PSO besides hyperparameters, domain data etc.
@@ -30,7 +30,7 @@ class PSOConfig:
     """
     seed: int = int(time.time())
     
-@PsoDataClass
+@_PsoDataClass
 @dataclass        
 class PSOHyperparameters:
     """Class which holds PSO hyperparameters
@@ -80,7 +80,7 @@ class PSOHyperparameters:
             return False
         return True
     
-@PsoDataClass
+@_PsoDataClass
 @dataclass    
 class CCDHyperparameters:
     """
@@ -108,7 +108,7 @@ class CCDHyperparameters:
             return False
         return True
 
-@PsoDataClass 
+@_PsoDataClass 
 @dataclass
 class DomainData:
     """
@@ -117,12 +117,11 @@ class DomainData:
 
     upper_bound:        upper bounds of the domain
     lower_bound:        lower bounds of the domain
-    v_max:              vector controlling the maximum velocity of particles
     """
     upper_bound: p.ADTYPE
     lower_bound: p.ADTYPE
 
-@PsoDataClass
+@_PsoDataClass
 @dataclass
 class IterationData:
     """
@@ -137,7 +136,6 @@ class IterationData:
                         better than a previous run of PSO.
     iteration_g_best:   Opposite of recorded_g_best, records the g_best that this particular
                         instance found before comparison with other iterations.
-
     old_g_bests:        All of the old g_bests that were recorded up to this point.
     """
     iteration_num: int
@@ -148,26 +146,47 @@ class IterationData:
     iteration_g_best: p.ADTYPE
     old_g_bests: p.ADTYPE
 
-class PSOLogTypes(enum.Enum):
+class LogLevels(enum.Enum):
+    """
+    Level of PSO Logger.
+
+    NO_LOG:  Don't use the logger, default.
+    LOG_ONLY_MPSO:  Record 
+    """
     NO_LOG = 0
-    QUALITY = 1
-    TIME = 2
+    LOG_ONLY_MPSO = 1
+    LOG_ALL = 2
     
-@PsoDataClass
+@_PsoDataClass
 @dataclass
 class PSOLoggerConfig:
     """
     Settings for the PSOLogger class.
+    log_type:  See PSOLogTypes
+    track_quality:  Track the quality of solution that PSO produces.
+    track_time:  Track the time that it takes for PSO to run.
+
+    track_pos_matrix:  unimplemented, no effect
+    track_vel_matrix:  unimplemented, no effect
+    track_pbest_matrix:  unimplemented, no effect
+    notes:  unimplemneted, no effect
     """
-    log_type: PSOLogTypes = PSOLogTypes.NO_LOG
+    log_level: LogLevels = LogLevels.NO_LOG
+    track_quality:  bool = True
+    track_time: bool = True
+    
     track_pos_matrix: bool = True
     track_vel_matrix: bool = True
     track_pbest_matrix: bool = True
     notes: str = ""
 
-@PsoDataClass
+@_PsoDataClass
 @dataclass
 class MPSORunnerConfigs:
-    """Class which defines the configurations for the MPSO Runner"""
+    """
+    Class which defines the configurations for the MPSO Runner
+    
+    use_ccd:  use ccd when running MPSO, which enables MPSO-CCD
+    """
     use_ccd: bool = True
-
+    iterations: int = 30

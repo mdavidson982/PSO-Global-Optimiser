@@ -1,3 +1,7 @@
 {
-    "seed": 3
+    "datatype": "PSOConfig", 
+    "data":
+    {
+        "seed": 3
+    }
 }

@@ -1,14 +1,13 @@
-import numpy as np
-import psofuncts.initializer as ini
-import utils.parameters as p
+from psofuncts.initializer import initializer
 import psofuncts.update as up
-import testfuncts.testfuncts as tf
-import psofuncts.ccd as ccd
-import time
-import pandas as pd
 import psodataclass as dc
-from dataclasses import dataclass
+
 import utils.util as u
+import utils.parameters as p
+
+import numpy as np
+import pandas as pd
+import time
 
 #initialization variables
 #calls the initialization function in the initializer.py. 
@@ -24,36 +23,6 @@ import utils.util as u
 #p_best, and g_best functions until we get a satisfactory answer, and loop under the number of times defined in
 #max iteration var
 
-class PSOInterface:
-    """
-    Interface that defines PSO operations
-    initialize():     Initialize the PSO data before the PSO loop
-    update():         Update the PSO data according to PSO scheme
-    CCD():            Run CCD from PSO data
-    set_g_best():     Set the g_best of the PSO data
-    """
-
-    g_best: p.ADTYPE
-
-    def initialize(self):
-        """
-        Run initialization to get necessary matrices
-        """
-        pass
-
-    def update(self) -> bool:
-        """
-        Performs an iteration of the PSO algorithm.  Returns whether the instance should terminate.
-        """
-        pass
-
-    def CCD(self) -> p.ADTYPE:
-        """
-        Run CCD by taking g_best as a main input, and refining it
-        """
-        pass
-
-@dataclass
 class PSO:
     """
     Holds the data that PSO uses to run its algorithm
@@ -72,8 +41,6 @@ class PSO:
     seed:               Integer to use for RNG
     old_g_best:         matrix recording the last g_bests for use in second termination criteria
     iterations:         current iteration of the instance
-
-
     """
     pso_hypers: dc.PSOHyperparameters
     ccd_hypers: dc.CCDHyperparameters
@@ -113,9 +80,9 @@ class PSO:
         self.function = function
         self.g_best = None
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Run initialization to get necessary matrices"""
-        pos_matrix, vel_matrix, p_best, g_best, v_max = ini.initializer(
+        pos_matrix, vel_matrix, p_best, g_best, v_max = initializer(
             num_part=self.pso_hypers.num_part, 
             num_dim=self.pso_hypers.num_dim, 
             alpha=self.pso_hypers.alpha, 
@@ -191,20 +158,6 @@ class PSO:
         self.iteration += 1
 
         return self.should_terminate()
-    
-    def CCD(self):
-        """Run CCD by taking g_best as a main input, and refining it"""
-        ccd_hypers = self.ccd_hypers
-        self.g_best = ccd.CCD(
-            initial=self.g_best, 
-            lb = self.domain_data.lower_bound, 
-            ub = self.domain_data.upper_bound,
-            alpha = ccd_hypers.ccd_alpha, 
-            tol = ccd_hypers.ccd_tol, 
-            max_its = ccd_hypers.ccd_max_its,
-            third_term_its = ccd_hypers.ccd_third_term_its, 
-            func=self.function
-        )
 
     def should_terminate(self) -> bool:
         """Helper function which determines if the instance should terminate"""
@@ -221,183 +174,97 @@ class PSO:
         self.g_best = g_best
 
     def get_g_best_coords(self) -> p.ADTYPE:
+        """Return the coordinates of the current gbest"""
         return self.g_best[:-1]
     
     def get_g_best_value(self) -> p.DTYPE:
+        """Return the value of the current gbest"""
         return self.g_best[-1]
     
-class PSOTimeLogger:
+    def run_PSO(self):
+        "Runs an instance of PSO"
+        self.pso.initialize()
+        shouldTerminate = False
 
-    def __init__(self):
-        raise Exception("Unimplemented")
+        # pso.update() returns false when termination criteria have not been met,
+        # and true when termination criteria have been met.
+        while not shouldTerminate:
+            shouldTerminate = self.pso.update()
+
     
-class PSOQualityLogger:
+    @property
+    def pso(self):
+        return self
+    
+class PSOLogger:
     """
-    Wrapper for the PSO object, that enables logging.
+    Wrapper for the PSO object, that enables logging of the run.
     """    
     pso: PSO = None
     config: dc.PSOLoggerConfig
-    mpso_iterations: int = 0
-    df: pd.DataFrame
-    current_rows = []
+    rows: list[dict] = []
 
-    columns = ["mpso_iteration", "pso_iteration", "g_best_coords", "g_best_value"]
-
-    def __init__(self, pso: PSO, config: dc.PSOLoggerConfig = dc.PSOLoggerConfig()):
+    def __init__(self, 
+        pso: PSO, 
+        config: dc.PSOLoggerConfig = dc.PSOLoggerConfig()
+    ):
         self.pso = pso
         self.config = config
         self.mpso_iterations = 0
+        self.rows = []
+        self.current_row = {}
 
-        self.df = pd.DataFrame(columns=PSOQualityLogger.columns)
+    def record_row(self) -> None:
+        if self.config.track_quality:
+            self.current_row.update({
+                "pso_iteration": self.pso.iteration,
+                "g_best_coords": u.np_to_json(self.pso.get_g_best_coords()),
+                "g_best_value": self.pso.get_g_best_value(),
+            })
+        if self.config.track_time:
+            self.current_row.update({
+                "time": time.time_ns(),
+            })
+
+    def add_current_row(self) -> None:
+        self.rows.append(self.current_row)
+        self.current_row = {}
+
+    def return_results(self) -> pd.DataFrame:
+        return pd.DataFrame(self.rows)
     
-    def initialize(self):
+    def initialize(self) -> None:
         self.mpso_iterations += 1
         self.pso.initialize()
         
     def update(self) -> bool:
         should_terminate = self.pso.update()
+        self.record_row(is_ccd=False)
         return should_terminate
-    
-    def CCD(self):
-        self.pso.CCD()
-        new_row = {
-            "mpso_iteration": self.mpso_iterations,
-            "pso_iteration": self.pso.iteration,
-            "g_best_coords": u.np_to_json(self.pso.get_g_best_coords()),
-            "g_best_value": self.pso.get_g_best_value()
-        }
-        self.current_rows.append(new_row)
-        
-        return 
-    
+
+class PSOInterface:
+    """
+    Interface that defines PSO operations
+    initialize():     Initialize the PSO data before the PSO loop
+    update():         Update the PSO data according to PSO scheme
+    CCD():            Run CCD from PSO data
+    set_g_best():     Set the g_best of the PSO data
+    """
+
+    def initialize(self) -> None:
+        """
+        Run initialization to get necessary matrices
+        """
+        pass
+
+    def update(self) -> bool:
+        """
+        Performs an iteration of the PSO algorithm.  Returns whether the instance should terminate.
+        """
+        pass
+
+    def run_pso(self) ->
+
     @property
-    def g_best(self):
-        """Function to enable calling g_best directly"""
-        return self.pso.g_best
-    
-    @g_best.setter
-    def g_best(self, new_g_best):
-        self.pso.g_best = new_g_best
-
-@dataclass
-class MPSORunnerConfigs:
-    """Class which defines the configurations for the MPSO Runner"""
-    use_ccd: bool = True
-        
-# Non-graphical runner
-class MPSO_CCDRunner:
-    "Runner class.  Can run PSO, MPSO, or MPSO-CCD."
-    pso: PSOInterface #Can either be a logging instance of PSO or a non-logging
-    runner_settings: MPSORunnerConfigs
-    runs: int
-
-    def __init__(self, pso: PSO, runs: int = 30, logging_settings: dc.PSOLoggerConfig = dc.PSOLoggerConfig(),
-                 runner_settings: MPSORunnerConfigs = MPSORunnerConfigs()):
-        if logging_settings.log_type == dc.PSOLogTypes.NO_LOG:
-            self.pso = pso
-        elif logging_settings.log_type == dc.PSOLogTypes.QUALITY:
-            self.pso = PSOQualityLogger(pso=pso, config=logging_settings)
-        elif logging_settings.log_type == dc.PSOLogTypes.TIME:
-            self.pso = PSOTimeLogger()
-        else:
-            raise Exception("Not a valid type")
-
-        self.runner_settings = runner_settings
-        self.runs = runs
-
-    def run_PSO(self):
-        "Runs PSO"
-        self.pso.initialize()
-        shouldTerminate = False
-
-        # pso.update() returns false when termination criteria have not been met,
-        # and true when termination criteria have been met
-        while not shouldTerminate:
-            shouldTerminate = self.pso.update()
-
-    def mpso_ccd(self):
-        """Runs PSO with CCD"""
-        start = time.time()
-
-        # Run MPSO
-        for _ in range(self.runs):
-            self.run_PSO()
-            if self.runner_settings.use_ccd:
-                self.pso.CCD()
-            
-        print(f"it took {time.time() - start} seconds to run")
-
-def test_PSO():
-
-    pso_hyperparameters = dc.PSOHyperparameters(
-        num_part = p.NUM_PART,
-        num_dim=p.NUM_DIM, 
-        alpha = p.ALPHA,
-        max_iterations=p.MAX_ITERATIONS, 
-        w=p.W, 
-        c1=p.C1, 
-        c2=p.C2, 
-        tolerance=p.TOLERANCE, 
-        mv_iteration=p.NO_MOVEMENT_TERMINATION
-    )
-
-    ccd_hyperparameters = dc.CCDHyperparameters(
-        ccd_alpha=p.CCD_ALPHA, 
-        ccd_tol=p.CCD_TOL, 
-        ccd_max_its=p.CCD_MAX_ITS,
-        ccd_third_term_its=p.CCD_THIRD_TERM_ITS
-    )
-
-    domain_data = dc.DomainData(
-        upper_bound = p.UPPER_BOUND,
-        lower_bound = p.LOWER_BOUND
-    )
-
-    runner_config = MPSORunnerConfigs(
-        use_ccd=True
-    )
-
-    optimum = optimum=p.OPTIMUM
-    bias=p.BIAS,
-    function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
-
-    pso = PSO(
-        pso_hyperparameters = pso_hyperparameters,
-        ccd_hyperparameters = ccd_hyperparameters,
-        domain_data = domain_data,
-        function = function
-    )
-
-    logging_settings = dc.PSOLoggerConfig(
-        log_type = dc.PSOLogTypes.NO_LOG
-    )
-
-    runner = MPSO_CCDRunner(
-        pso=pso, 
-        runs=5, 
-        logging_settings=logging_settings,
-        runner_settings=runner_config
-    )
-
-    runner.mpso_ccd()
-    #runner = PSORunner(pso)
-    #runner.mpso_ccd()        """Set the g_best for this object"""
-    #print(runner.pso.pso)
-    print(runner.pso.g_best)
-
-    
-
-#test_PSO()
-
-
-
-
-
-    #terminating conditions: will either terminate when
-    #1. max iterations reached
-    #2. minimal movements after a few iterations. If the g_best doesn't move much and fits within our tolerance, we
-    # exit
-
-
-
-
+    def pso(self) -> PSO:
+        pass

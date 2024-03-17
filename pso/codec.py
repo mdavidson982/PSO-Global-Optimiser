@@ -5,6 +5,10 @@ File which handles json serialization/deserialization for various dataclasses.
 from io import TextIOWrapper
 import json
 import numpy as np
+from . import psodataclass as dc
+
+_DATATYPE = "datatype"
+_DATA = "data"
 
 class _DataClassEncoder(json.JSONEncoder):
     """Class which handles encoding of dataclass objects"""
@@ -12,6 +16,12 @@ class _DataClassEncoder(json.JSONEncoder):
         # Convert numpy arrays to lists, which has proven to be the easiest way to jsonize
         if type(o) == np.ndarray:
             return o.tolist()
+        elif type(o)in list(dc.DATACLASSES.values()):
+            dataclass_dict = {
+                _DATATYPE: type(o).__name__,
+                _DATA: o.__dict__
+            }
+            return dataclass_dict
         else:
             return o.__dict__
 
@@ -30,25 +40,23 @@ def dataclass_to_json(obj) -> str:
     """Convert a dataclass to a jsonized string"""
     return json.dumps(obj = obj, cls = _DataClassEncoder)
 
-def dataclass_to_json_file(obj, file: str | TextIOWrapper):
-    """Write a jsonized dataclass to a file"""
-    if type(file) == str:
-        with open(file, "w+") as file:
-            json.dump(obj = obj, fp = file, cls = _DataClassEncoder)
-    else:
-        json.dump(obj = obj, fp = file, cls = _DataClassEncoder)
+def dataclass_to_json_file(obj, file: TextIOWrapper):
+    json.dump(obj = obj, fp = file, cls = _DataClassEncoder)
 
-def json_to_dataclass(jsonstring: str, dataclass):
+def json_to_dataclass(jsonstring: str):
+    dataclass_name = json.loads(jsonstring)[_DATATYPE]
+    dataclass = dc.DATACLASSES[dataclass_name]
+
     """Convert a jsonized dataclass string to an object"""
     hook_function = _decoder_func(dataclass.decode_json_hooks)
-    return dataclass(**json.loads(jsonstring, object_hook=hook_function))
+    return dataclass(**json.loads(jsonstring, object_hook=hook_function)[_DATA])
 
-def json_file_to_dataclass(file: str | TextIOWrapper, dataclass):
-    """Load a json file into a dataclass"""
+def json_file_to_dataclass(file: TextIOWrapper):
+    # Fetch the dataclass type from the top level of the json file, and return its class type
+    dataclass_name = json.load(file)[_DATATYPE]
+    dataclass = dc.DATACLASSES[dataclass_name]
+    file.seek(0)
+    # Return its respective hooks, needed for decoding
     hook_function = _decoder_func(dataclass.decode_json_hooks)
-
-    if type(file) == str:
-        with open(file, "w+") as file:
-            return dataclass(**json.load(file, object_hook=hook_function))
-    else:
-        return dataclass(**json.load(file, object_hook=hook_function))
+    dataclass_dict = json.load(file, object_hook=hook_function)
+    return dataclass(**dataclass_dict[_DATA])

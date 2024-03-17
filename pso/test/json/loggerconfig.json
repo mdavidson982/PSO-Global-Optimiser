@@ -1,7 +1,13 @@
 {
-    "log_type": 0,
-    "track_pos_matrix": true,
-    "track_vel_matrix": false,
-    "track_pbest_matrix": true,
-    "notes": "no notes"
+    "datatype": "PSOLoggerConfig", 
+    "data":
+    {
+        "log_type": 0,
+        "track_time": true,
+        "track_quality": true,
+        "track_pos_matrix": true,
+        "track_vel_matrix": false,
+        "track_pbest_matrix": true,
+        "notes": "no notes"
+    }
 }

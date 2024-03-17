@@ -1,6 +1,10 @@
 {
-    "ccd_alpha": 0.9,
-    "ccd_max_its": 9,
-    "ccd_tol": 0.0001,
-    "ccd_third_term_its": 90
+"datatype": "CCDHyperparmeters", 
+"data":
+    {
+        "ccd_alpha": 0.9,
+        "ccd_max_its": 9,
+        "ccd_tol": 0.0001,
+        "ccd_third_term_its": 90
+    }
 }

@@ -1,11 +1,15 @@
 {
-    "num_part": 80, 
-    "num_dim": 30, 
-    "alpha": 0.8, 
-    "w": 0.1, 
-    "c1": 0.7, 
-    "c2": 0.2, 
-    "tolerance": 0.9, 
-    "mv_iteration": 7, 
-    "max_iterations": 193
+    "datatype": "PSOHyperparameters", 
+    "data":
+    {
+        "num_part": 80, 
+        "num_dim": 30, 
+        "alpha": 0.8, 
+        "w": 0.1, 
+        "c1": 0.7, 
+        "c2": 0.2, 
+        "tolerance": 0.9, 
+        "mv_iteration": 7, 
+        "max_iterations": 193
+    }
 }

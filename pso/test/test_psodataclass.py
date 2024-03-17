@@ -63,7 +63,7 @@ class PSOCodecTester(DataTester):
 
         # Check regular serialization works
         hparams_jsonized = codec.dataclass_to_json(expected_hparams)
-        unjsonized_hparams = codec.json_to_dataclass(hparams_jsonized, dc.PSOHyperparameters)
+        unjsonized_hparams = codec.json_to_dataclass(hparams_jsonized)
         self.check_equals(expected_hparams, unjsonized_hparams)
 
         # Check that the json can be written to and retrieved from file
@@ -71,9 +71,8 @@ class PSOCodecTester(DataTester):
             codec.dataclass_to_json_file(expected_hparams, file)
 
         with open(file_path, "r") as file:
-            file_unjsonized_hparams = codec.json_file_to_dataclass(file, dc.PSOHyperparameters)
+            file_unjsonized_hparams = codec.json_file_to_dataclass(file)
         self.check_equals(expected_hparams, file_unjsonized_hparams)
-
 
     def test_domain_codec(self):
         """
@@ -93,14 +92,15 @@ class PSOCodecTester(DataTester):
 
         # Check regular serialization works
         domaindata_jsonized = codec.dataclass_to_json(expected_domaindata)
-        unjsonized_domaindata = codec.json_to_dataclass(domaindata_jsonized, dc.DomainData)
+        unjsonized_domaindata = codec.json_to_dataclass(domaindata_jsonized)
         self.check_equals(expected_domaindata, unjsonized_domaindata)
 
         # Check that the json can be written to and retrieved from file
         with open(file_path, "w+") as file:
             codec.dataclass_to_json_file(expected_domaindata, file)
+        
         with open(file_path, "r") as file:
-            file_unjsonized_domaindata = codec.json_file_to_dataclass(file, dc.DomainData)
+            file_unjsonized_domaindata = codec.json_file_to_dataclass(file)
         self.check_equals(expected_domaindata, file_unjsonized_domaindata)
 
     def test_read_in(self):
@@ -117,11 +117,9 @@ class PSOCodecTester(DataTester):
         # and deserialize to their respective types
         for file_data in file_names:
             with open(f"{_JSON_PATH}{file_data[0]}", "r") as file:
-                dataclass = codec.json_file_to_dataclass(file, file_data[1])
+                dataclass = codec.json_file_to_dataclass(file)
                 logging.info(f"Constructed {file_data[1].__name__}")
                 logging.info(f"Contents: {dataclass.__dict__}\n")
         
-                
-
 if __name__ == "__main__":
     unittest.main()
