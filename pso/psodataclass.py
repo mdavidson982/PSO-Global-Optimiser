@@ -182,6 +182,16 @@ class PSOLoggerConfig:
 
 @_PsoDataClass
 @dataclass
+class MPSOLoggerConfig:
+
+    track_quality:  bool = True
+    track_time: bool = True
+    """
+    Settings for the MPSOLogger class.
+    """
+
+@_PsoDataClass
+@dataclass
 class MPSOConfigs:
     """
     Class which defines the configurations for the MPSO Runner

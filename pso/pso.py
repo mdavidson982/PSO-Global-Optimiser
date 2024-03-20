@@ -196,7 +196,6 @@ class PSOLogger:
     pso: PSO = None
     config: dc.PSOLoggerConfig
     rows: list[dict] = []
-    current_row = {}
 
     def __init__(self, 
         pso: PSO, 
@@ -207,7 +206,7 @@ class PSOLogger:
         self.rows = []
 
     def record_row(self) -> None:
-        """"""
+        """Record values for a specific iteration of PSO"""
         current_row = {}
         if self.config.track_quality:
             current_row.update({
@@ -222,7 +221,12 @@ class PSOLogger:
         self.rows.append(current_row)
 
     def return_results(self) -> pd.DataFrame:
+        """Return the results of the logger as a dataframe"""
         return pd.DataFrame(self.rows)
+    
+    def write_results_to_json(self, filepath):
+        with open(filepath) as file:
+            pd.read_json()
     
     def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Run initialization to get necessary matrices"""
@@ -314,5 +318,6 @@ def test_run_pso():
         config = logging_settings
     )
 
-    pso.run_PSO()
-
+    pso_logger.run_PSO()
+    df = pso_logger.return_results()
+    print(df.head())

@@ -1,6 +1,10 @@
 from . import pso as pso_file, psodataclass as dc
 from psofuncts import ccd
 import utils.parameters as p
+from utils.util import np_to_json
+import pandas as pd
+import numpy as np
+from time import time_ns
 
 # Non-graphical runner
 class MPSO:
@@ -61,21 +65,64 @@ class MPSO:
         self.g_best = self.pso.pso.g_best
         if self.mpso_config.use_ccd:
             self.g_best = self.run_CCD()
+        self.iterations += 1
         
     def run_mpso(self) -> None:
         """Runs a full instance of MPSO, optionally with CCD"""
-        for _ in range(self.mpso_config.iterations):
+        while self.iterations < self.mpso_config.iterations:
             self.run_iteration()
 
 class MPSOLogger:
-    mpso: MPSO
-
     """Wrapper for the MPSO object, that enables logging of the run."""
+    mpso: MPSO
+    config: dc.MPSOLoggerConfig
+    rows: list[dict] = {}
+
+    def _check_PSOLogger(self):
+        """Check to see if the underlying pso object is a logger"""
+        return hasattr(self.mpso.pso, pso_file.PSOLogger.return_results.__name__)
+
+    def return_results(self) -> pd.DataFrame:
+        """Return the results of the logger"""
+        return pd.DataFrame(self.rows)
+
+    def run_iteration(self) -> None:
+        """Runs an iteration of the underlying mpso object, and records any
+        pertinent values.
+        """
+        pso_obj = self.mpso.pso.pso
+
+        current_row = {}
+        # Run an iteration of the underlying mpso object
+        self.mpso.run_iteration()
+        
+        # Track quality of solution
+        if self.config.track_quality:
+            current_row.update({
+                "mpso_iteration": self.mpso.iterations,
+                "g_best_coords": np_to_json(pso_obj.get_g_best_coords()),
+                "mpso_iteration": pso_obj.get_g_best_value(),
+            })
+        # Track time it took to get to the solution
+        if self.config.track_time:
+            current_row.update({
+                "time": time_ns(),
+            })
+
+        # If the underlying pso object is a logger object, 
+        # add this as a column.
+        if self._check_PSOLogger():
+            current_row.update({
+                "PSODataframe": self.mpso.pso.return_results()
+            })
+        self.rows.append(current_row)
+
+    def run_mpso(self) -> None:
+        while self.mpso.iterations < self.mpso.mpso_config.iterations:
+            self.run_iteration()
+
 
 class MPSOInterface:
-    """Interface which defines the functions for MPSO"""
-    def run_CCD(self) -> None:
-        """Run CCD by taking g_best from PSO as a main input, and refining it"""
 
     def run_iteration(self) -> None:
         """
@@ -86,3 +133,24 @@ class MPSOInterface:
 
     def run_mpso(self) -> None:
         """Runs a full instance of MPSO, optionally with CCD"""
+
+def extension():
+
+    z = pd.DataFrame(np.array(((1, 2, 3), (4, 5, 6))), columns=["this", "is", "a"])
+    z2 = pd.DataFrame(np.array(((2.3, 4.9, 9.8), (5.1, -0.9, 3))))
+    z3 = pd.DataFrame(np.array(((1.3, 4.9), (8.75, 4.9), (39.48, 8.7))))
+    #print(z)
+
+    v = pd.DataFrame({"idxs": [1, 2], "dfs": [z, z2]})
+    v2 = pd.DataFrame({"idxs": [1, 2], "dfs": [z2, z3]})
+
+    dorp = v
+    v.to_json("./testeradf.json")
+    v2.to_json("./testeradsf.json")
+
+    t = pd.read_json("./testeradf.json")
+    
+    print(t)
+
+    print(pd.DataFrame((t["dfs"].iloc[0])))
+    print(pd.DataFrame((t["dfs"].iloc[1])))
