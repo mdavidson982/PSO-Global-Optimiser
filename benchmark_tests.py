@@ -99,7 +99,7 @@ def run_benchmark_tests():
     current_datetime = datetime.now()
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M")
     
-    folder_path = os.path.join(BENCHMARKFOLDER), f"BM{formatted_datetime}"
+    folder_path = os.path.join(BENCHMARKFOLDER, f"BM{formatted_datetime}")
 
     os.mkdir(folder_path)
 
@@ -110,15 +110,19 @@ def run_benchmark_tests():
     for run_type in [(x, y) for x in track_types for y in mpso_types]:
         track_type = run_type[0]
         mpso_type = run_type[1]
-        # Adjust configs based on run type
+
+        # Adjust tracking configs for whether we are doing something for quality or time
         if track_type == QUALITY:
+            # If we are tracking quality, it is fine to track as many values as possible
             pso_logger_config.track_quality = True
             use_pso_logger = True
         elif track_type == TIME:
+            # If we are tracking time, limit tracking to only MPSO iterations
             use_pso_logger = False
         else:
             raise Exception(f"{track_type} Not a valid track type")
 
+        # Adjust tracking configs based on whether we are using MPSO or MPSOCCD
         if mpso_type == MPSO:
             mpso_config.use_ccd = False
             mpso_logger_config.track_ccd = False
@@ -144,13 +148,14 @@ def run_benchmark_tests():
                 pso_configs = pso_config
             )
 
-            pso_logger = pso_file.PSOLogger(
-                pso = pso,
-                config = pso_logger_config
-            )
+            if use_pso_logger:
+                pso = pso_file.PSOLogger(
+                    pso = pso,
+                    config = pso_logger_config
+                )
 
             mpso = mpso_file.MPSO(
-                pso = pso_logger,
+                pso = pso,
                 ccd_hyperparameters= ccd_hyperparameters,
                 mpso_config = mpso_config
             )
