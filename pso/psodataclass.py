@@ -186,6 +186,7 @@ class MPSOLoggerConfig:
 
     track_quality:  bool = True
     track_time: bool = True
+    track_ccd: bool = True
     """
     Settings for the MPSOLogger class.
     """

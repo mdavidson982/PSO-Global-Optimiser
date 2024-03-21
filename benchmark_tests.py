@@ -12,10 +12,23 @@ import json
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+QUALITY = 0
+TIME = 1
+
+track_types = [QUALITY, TIME]
+
+MPSO = 0
+MPSOCCD = 1
+
+mpso_types = [MPSO, MPSOCCD]
+
 MPSOQUALITY = 0
 MPSOCCDQUALITY = 1
 MPSOTIME = 2
 MPSOCCDTIME = 3
+
+track_types
+
 run_types = [MPSOQUALITY, MPSOCCDQUALITY, MPSOTIME, MPSOCCDTIME]
 
 BENCHMARKFOLDER = "benchmarkruns"
@@ -51,6 +64,8 @@ def construct_configs(dims: int, dtype):
         lower_bound = lower_bound
     )
 
+    pso_config = dc.PSOConfig()
+
     pso_logger_config = dc.PSOLoggerConfig(
         log_level = dc.LogLevels.LOG_ALL,
         track_quality = True,
@@ -70,11 +85,11 @@ def construct_configs(dims: int, dtype):
     )
 
     mpso_logger_config = dc.MPSOLoggerConfig(
-        track_quality=True,
+        track_quality = True,
         track_time = True
     )
 
-    return pso_hyperparameters, domain_data, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config
+    return pso_hyperparameters, domain_data, pso_config, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config
 
 
 def run_benchmark_tests():
@@ -88,9 +103,30 @@ def run_benchmark_tests():
 
     os.mkdir(folder_path)
 
-    pso_hyperparameters, domain_data, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config = construct_configs(dims, dtype)
+    pso_hyperparameters, domain_data, pso_config, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config = construct_configs(dims, dtype)
+    use_pso_logger = True
 
-    for run_type in run_types:
+    # Run through every type of tracker
+    for run_type in [(x, y) for x in track_types for y in mpso_types]:
+        track_type = run_type[0]
+        mpso_type = run_type[1]
+        # Adjust configs based on run type
+        if track_type == QUALITY:
+            pso_logger_config.track_quality = True
+            use_pso_logger = True
+        elif track_type == TIME:
+            use_pso_logger = False
+        else:
+            raise Exception(f"{track_type} Not a valid track type")
+
+        if mpso_type == MPSO:
+            mpso_config.use_ccd = False
+            mpso_logger_config.track_ccd = False
+        elif mpso_type == MPSOCCD:
+            mpso_config.use_ccd = True
+            mpso_logger_config.track_ccd = True
+        else:
+            raise Exception(f"{mpso_type} not a valid run type")
 
         for i in range(len(tf.TESTFUNCTIDS)):
             name = tf.TESTFUNCTSTRINGS[i]
@@ -98,13 +134,6 @@ def run_benchmark_tests():
 
             if name in IGNORELIST or id in IGNORELIST:
                 continue
-
-            if run_type == MPSOQUALITY:
-                
-
-
-
-            pso_config = dc.PSOConfig()
 
             function = tf.TF.generate_function(name, optimum=optimum, bias=0)
 
@@ -120,17 +149,11 @@ def run_benchmark_tests():
                 config = pso_logger_config
             )
 
-
-
-
-
             mpso = mpso_file.MPSO(
                 pso = pso_logger,
                 ccd_hyperparameters= ccd_hyperparameters,
                 mpso_config = mpso_config
             )
-
-
 
             mpso_logger = mpso_file.MPSOLogger(
                 mpso = mpso,

@@ -39,11 +39,15 @@ class MPSO:
                 raise Exception("Configuration set to use ccd, but no hyperparameters supplied.")
             if not self.ccd_hyperparameters.has_valid_learning_params():
                 raise Exception("Bad learning parameters for CCD")
+            
+    def run_PSO(self) -> None:
+        self.pso.run_PSO(self.g_best)
+        self.g_best = self.pso.pso.g_best
 
     def run_CCD(self) -> None:
         """Run CCD by taking g_best from PSO as a main input, and refining it"""
         ccd_hypers = self.ccd_hyperparameters
-        return ccd.CCD(
+        self.g_best = ccd.CCD(
             initial=self.pso.pso.g_best, 
             lb = self.pso.pso.domain_data.lower_bound, 
             ub = self.pso.pso.domain_data.upper_bound,
@@ -60,10 +64,9 @@ class MPSO:
         temp_g_best is used as a starting point for the next pso instance, and will be
         overwritten by the result of CCD if CCD is enabled.
         """
-        self.pso.run_PSO(self.g_best)
-        self.g_best = self.pso.pso.g_best
+        self.run_PSO(self.g_best)
         if self.mpso_config.use_ccd:
-            self.g_best = self.run_CCD()
+            self.run_CCD()
         self.iterations += 1
         
     def run_mpso(self) -> None:
@@ -97,25 +100,40 @@ class MPSOLogger:
         """Runs an iteration of the underlying mpso object, and records any
         pertinent values.
         """
-        # Run an iteration of the underlying mpso object
-        self.mpso.run_iteration()
 
         pso_obj = self.mpso.pso.pso
         current_row = {}
+        # Run an iteration of the underlying mpso object
+        self.mpso.run_PSO()
+
+        # Track time it took to get to the solution
+        if self.config.track_time:
+            current_row.update({
+                "time": time_ns(),
+            })
         
         # Track quality of solution
         if self.config.track_quality:
             current_row.update({
                 "mpso_iteration": self.mpso.iterations,
                 "g_best_coords": np_to_json(pso_obj.get_g_best_coords()),
-                "mpso_iteration": pso_obj.get_g_best_value(),
-            })
-        # Track time it took to get to the solution
-        if self.config.track_time:
-            current_row.update({
-                "time": time_ns(),
+                "g_best_value": pso_obj.get_g_best_value(),
             })
 
+        if self.mpso.mpso_config.use_ccd: 
+            self.mpso.run_CCD()
+            
+            if self.config.track_ccd:
+                if self.config.track_time:
+                    current_row.update({
+                        "time": time_ns()
+                    })
+                if self.config.track_quality:
+                    current_row.update({
+                        "g_best_coords_ccd": np_to_json(pso_obj.get_g_best_coords()),
+                        "g_best_value_ccd": pso_obj.get_g_best_value()
+                    })
+            
         # If the underlying pso object is a logger object, 
         # add this as a column.
         if self._check_PSOLogger():
