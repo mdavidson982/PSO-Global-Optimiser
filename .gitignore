@@ -3,3 +3,5 @@ test2.py
 test3.py
 visualizationtest.py
 temp/
+/benchmarkruns/*
+!/benchmarkruns/

@@ -78,7 +78,7 @@ class MPSOLogger:
     """Wrapper for the MPSO object, that enables logging of the run."""
     mpso: MPSO
     config: dc.MPSOLoggerConfig
-    rows: list[dict] = {}
+    rows: list[dict] = []
 
     def __init__(self, mpso: MPSO, config: dc.MPSOLoggerConfig = dc.MPSOLoggerConfig()):
         self.mpso = mpso
@@ -141,6 +141,7 @@ class MPSOLogger:
                 "PSODataframe": self.mpso.pso.return_results()
             })
         self.rows.append(current_row)
+        self.mpso.iterations += 1
 
     def run_mpso(self) -> None:
         while self.mpso.iterations < self.mpso.mpso_config.iterations:
