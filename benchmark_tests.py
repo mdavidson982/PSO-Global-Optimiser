@@ -69,7 +69,6 @@ def construct_configs(dims: int, dtype):
     pso_config = dc.PSOConfig()
 
     pso_logger_config = dc.PSOLoggerConfig(
-        log_level = dc.LogLevels.LOG_ALL,
         track_quality = True,
         track_time = True
     )
@@ -107,10 +106,8 @@ def run_benchmark_tests():
     pso_hyperparameters, domain_data, pso_config, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config = construct_configs(dims, dtype)
     use_pso_logger = None
 
-    extension_name = f"{mpso_name}-{track_name}"
     # Run through every type of tracker
     for run_type in [(x, y) for x in track_types for y in mpso_types]:
-        logging.info(f"Running {extension_name}")
         track_type = run_type[0]
         mpso_type = run_type[1]
 
@@ -142,6 +139,9 @@ def run_benchmark_tests():
         else:
             raise Exception(f"{mpso_type} not a valid run type")
         
+        extension_name = f"{mpso_name}-{track_name}"
+        logging.info(f"Running {extension_name} tests")
+        
         # Run through all test functions
         for i in range(len(tf.TESTFUNCTIDS)):
             name = tf.TESTFUNCTSTRINGS[i]
@@ -149,6 +149,9 @@ def run_benchmark_tests():
 
             if name in IGNORELIST or id in IGNORELIST:
                 continue
+
+            logging.info(f"Running {name} function")
+            print(f"Running {name} function for {extension_name}")
 
             function = tf.TF.generate_function(id, optimum=optimum, bias=0)
 
@@ -189,28 +192,25 @@ def run_benchmark_tests():
             (mpso_logger_config, "mpso_logger_config")
         ]
 
+        logging.info("Writing results to file")
+        print("Writing results to file")
+
         extension_name = f"{mpso_name}-{track_name}"
         result_folder_path = os.path.join(folder_path, extension_name)
         os.mkdir(result_folder_path)
-        pd.DataFrame(rows).to_json(os.path.join(result_folder_path, "datadump.json"))
+
+        with open(os.path.join(result_folder_path, "datadump.jsonl"), "w") as file:
+            for row in pd.DataFrame(rows).iterrows():
+                row[1].to_json(file)
 
         for dataclass in dataclasses:
             # Write the configs to a json file as well
             file_name = dataclass[1]
             data = dataclass[0]
 
-            with open(os.path.join(result_folder_path, f"{file_name}.json")) as file:
+            with open(os.path.join(result_folder_path, f"{file_name}.json"), "w") as file:
                 codec.dataclass_to_json_file(data, file)
 
-
     print("Finished running test functions")
-
-
-    #formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M")
-    #df = pd.DataFrame(rows, columns=columns)
-    #file_name = f"{BENCHMARKFOLDER}/MPSORESULTS_{formatted_datetime}.csv"
-
-    #print(f"Writing results to {file_name}")
-    #df.to_csv(file_name)
 
 run_benchmark_tests()

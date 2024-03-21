@@ -171,7 +171,6 @@ class PSOLoggerConfig:
     track_pbest_matrix:  unimplemented, no effect
     notes:  unimplemneted, no effect
     """
-    log_level: LogLevels = LogLevels.NO_LOG
     track_quality:  bool = True
     track_time: bool = True
     
