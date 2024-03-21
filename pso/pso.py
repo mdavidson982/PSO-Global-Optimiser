@@ -62,7 +62,7 @@ class PSO:
         pso_configs: dc.PSOConfig = dc.PSOConfig()
     ):
         
-        np.random.seed(pso_configs.seed)
+        #np.random.seed(pso_configs.seed) TODO delete, we want to set the seed at the topmost layer
 
         self.pso_hypers = pso_hyperparameters
         if not self.pso_hypers.has_valid_learning_params():
@@ -224,10 +224,10 @@ class PSOLogger:
         """Return the results of the logger as a dataframe"""
         return pd.DataFrame(self.rows)
     
-    def write_results_to_json(self, filepath):
-        with open(filepath) as file:
-            pd.read_json()
-    
+    def write_results_to_json(self, filepath: str):
+        """Write this specific dataframe to json"""
+        self.return_results().to_json(filepath)
+
     def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Run initialization to get necessary matrices"""
         self.pso.initialize(start_g_best=start_g_best)

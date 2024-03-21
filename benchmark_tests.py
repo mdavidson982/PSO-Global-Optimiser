@@ -1,113 +1,144 @@
-import pso
-import testfuncts.testfuncts as testfuncts
+from pso import pso as pso_file, mpso as mpso_file, psodataclass as dc, codec
+import testfuncts.testfuncts as tf
+import utils.parameters as p
 import numpy as np
 import pandas as pd
+import os
 import time
-import utils.parameters as p
+
 from datetime import datetime
 import warnings
 import json
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-MPSORUN = 0
-MPSOCCDRUN = 1
+MPSOQUALITY = 0
+MPSOCCDQUALITY = 1
+MPSOTIME = 2
+MPSOCCDTIME = 3
+run_types = [MPSOQUALITY, MPSOCCDQUALITY, MPSOTIME, MPSOCCDTIME]
+
 BENCHMARKFOLDER = "benchmarkruns"
 
-IGNORELIST = [testfuncts.SHIFTEDELLIPTICID, 
-              testfuncts.GRIEWANKID, 
-              testfuncts.SHIFTEDROTATEDACKLEYID,
-              testfuncts.ROTATEDRASTRIGINID
+IGNORELIST = [tf.SHIFTEDELLIPTICID, 
+              tf.GRIEWANKID, 
+              tf.SHIFTEDROTATEDACKLEYID,
+              tf.ROTATEDRASTRIGINID
               ]
 
 
-def record_run(runner: pso.MPSO_CCDRunner, mpso_or_mpsoccd: int, name: str, id: int):
-    start = time.time()
-    
-    if mpso_or_mpsoccd == MPSORUN:
-        print(f"Starting {name} mpso run")
-        type = "MPSO"
-        runner.mpso()
-        print(f"Ended {name} mpso run")
+def record_run(runner: mpso_file.MPSOLogger, name: str, mpso_runs: int = 30):
+    pass
 
-    elif mpso_or_mpsoccd == MPSOCCDRUN:
-        print(f"Starting {name} mpsoccd run")
-        type = "MPSOCCD"
-        runner.mpso_ccd()
-        print(f"Ended {name} mpsoccd run")
-    
-    time_taken = time.time() - start
-    pso_obj = runner.pso
+def construct_configs(dims: int, dtype):
+    pso_hyperparameters = dc.PSOHyperparameters(
+        num_part = 50,
+        num_dim = dims, 
+        alpha = 0.7,
+        max_iterations = 100, 
+        w = 0.7, 
+        c1 = 0.4, 
+        c2 = 0.4, 
+        tolerance=10**-6, 
+        mv_iteration = 10
+    )
+
+    upper_bound = np.ones(dims, dtype=dtype)*100
+    lower_bound = upper_bound*-1
+
+    domain_data = dc.DomainData(
+        upper_bound = upper_bound,
+        lower_bound = lower_bound
+    )
+
+    pso_logger_config = dc.PSOLoggerConfig(
+        log_level = dc.LogLevels.LOG_ALL,
+        track_quality = True,
+        track_time = True
+    )
+
+    ccd_hyperparameters = dc.CCDHyperparameters(
+        ccd_alpha = 0.3, 
+        ccd_tol = 10**-6, 
+        ccd_max_its = 20,
+        ccd_third_term_its = 4
+    )
+
+    mpso_config = dc.MPSOConfigs(
+        use_ccd = True,
+        iterations = 30
+    )
+
+    mpso_logger_config = dc.MPSOLoggerConfig(
+        track_quality=True,
+        track_time = True
+    )
+
+    return pso_hyperparameters, domain_data, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config
+
 
 def run_benchmark_tests():
-
     dims = 30
     dtype = np.float64
-    
-    upper_bound = np.ones(dims, dtype=dtype)*1000
-    lower_bound = upper_bound*-1
     optimum = np.zeros(dims, dtype=dtype)
     current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M")
+    
+    folder_path = os.path.join(BENCHMARKFOLDER), f"BM{formatted_datetime}"
+
+    os.mkdir(folder_path)
+
+    pso_hyperparameters, domain_data, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config = construct_configs(dims, dtype)
+
+    for run_type in run_types:
+
+        for i in range(len(tf.TESTFUNCTIDS)):
+            name = tf.TESTFUNCTSTRINGS[i]
+            id = tf.TESTFUNCTIDS[i]
+
+            if name in IGNORELIST or id in IGNORELIST:
+                continue
+
+            if run_type == MPSOQUALITY:
+                
 
 
-    for i in range(len(testfuncts.TESTFUNCTIDS)):
-        name = testfuncts.TESTFUNCTSTRINGS[i]
-        id = testfuncts.TESTFUNCTIDS[i]
 
-        if name in IGNORELIST or id in IGNORELIST:
-            continue
+            pso_config = dc.PSOConfig()
 
-        pso_hyperparameters = PSOHyperparameters(
-        num_part = p.NUM_PART,
-        num_dim= p.NUM_DIM, 
-        alpha = p.ALPHA,
-        max_iterations=p.MAX_ITERATIONS, 
-        w=p.W, 
-        c1=p.C1, 
-        c2=p.C2, 
-        tolerance=p.TOLERANCE, 
-        mv_iteration=p.NO_MOVEMENT_TERMINATION
-        )
+            function = tf.TF.generate_function(name, optimum=optimum, bias=0)
 
-        ccd_hyperparameters = CCDHyperparameters(
-            ccd_alpha=p.CCD_ALPHA, 
-            ccd_tol=p.CCD_TOL, 
-            ccd_max_its=p.CCD_MAX_ITS,
-            ccd_third_term_its=p.CCD_THIRD_TERM_ITS
-        )
+            pso = pso_file.PSO(
+                pso_hyperparameters = pso_hyperparameters,
+                domain_data = domain_data,
+                function = function,
+                pso_configs = pso_config
+            )
 
-        domain_data = DomainData(
-            upper_bound = p.UPPER_BOUND,
-            lower_bound = p.LOWER_BOUND
-        )
+            pso_logger = pso_file.PSOLogger(
+                pso = pso,
+                config = pso_logger_config
+            )
 
-        runner_config = MPSORunnerConfigs(use_ccd=True)
 
-        optimum = optimum=p.OPTIMUM
-        bias=p.BIAS,
-        function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
 
-        pso = PSOData(
-            pso_hyperparameters = pso_hyperparameters,
-            ccd_hyperparameters = ccd_hyperparameters,
-            domain_data = domain_data,
-            function = function
-        )
 
-        logging_settings = PSOLoggerConfig(
-            should_log=True
-        )
 
-        runner = MPSO_CCDRunner(
-            pso=pso, 
-            runs=5, 
-            logging_settings=logging_settings,
-            runner_settings=runner_config
-        )
-        runner = pso.MPSO_CCDRunner(pso_obj)
+            mpso = mpso_file.MPSO(
+                pso = pso_logger,
+                ccd_hyperparameters= ccd_hyperparameters,
+                mpso_config = mpso_config
+            )
 
-        for run_type in (MPSORUN, MPSOCCDRUN):
-            rows.append(record_run(runner, run_type, name, id))
+
+
+            mpso_logger = mpso_file.MPSOLogger(
+                mpso = mpso,
+                mpso_logger_config = mpso_logger_config
+            )
+
+        for run_type in run_types:
+            rows = record_run(mpso_logger, name=name, run_type=run_type, mpso_runs = 30)
         
     print("Finished running test functions")
 
@@ -120,11 +151,3 @@ def run_benchmark_tests():
     df.to_csv(file_name)
 
 run_benchmark_tests()
-    
-
-        
-
-        
-
-        
-    

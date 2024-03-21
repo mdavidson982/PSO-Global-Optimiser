@@ -78,11 +78,15 @@ class MPSOTester(unittest.TestCase):
 
         mpso = mpso_file.MPSO(
             pso=pso,
-            runner_settings=runner_settings,
+            mpso_config=runner_settings,
             ccd_hyperparameters=ccd_hyperparameters
         )
 
         return mpso
+    
+    def construct_mpso_logger(self, pso_logging: bool, use_ccd: bool):
+        mpso = self.construct_mpso(pso_logging, use_ccd)
+        mpso_logger = mpso_file.MPSOLogger()
 
     def test_mpso_iteration(self):
         mpso = self.construct_mpso(False, False)
