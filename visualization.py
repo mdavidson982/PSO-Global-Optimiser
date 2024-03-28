@@ -266,12 +266,23 @@ class Visualization:
         self.contour_loc = ax.get_position() # Store this for mapping purposes later
 
         # Apply a logarithmic scale to the colors so that the minima takes more colors
-        levels = np.logspace(np.log10(np.min(z)),np.log10(np.max(z)),COLOR_LEVELS)
 
-        # Make the contour
-        ax.contourf(x, y, z, cmap="viridis",  
-                    extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
-                    norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels) 
+        minz = np.min(z)
+        maxz = np.max(z)
+
+        levels = np.geomspace(1, maxz-minz + 1, COLOR_LEVELS) + minz - 1
+
+        if np.min(z) > 0:
+            # Make the contour
+            ax.contourf(x, y, z, cmap="viridis",  
+                        extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
+                        norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels) 
+        else:
+            # Make the contour
+            ax.contourf(x, y, z, cmap="inferno",  
+                        extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
+                        levels=levels) 
+
         
         fig.savefig(self.contour_img_path) #Save file for use as a background
         self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")

@@ -59,12 +59,13 @@ class TestFuncts:
         
         return rosenbrock
 
-    #Rastrigin
+    #F9: Shifted Rastrigin’s Function
     def _rastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def rastrigin(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rastrigin function value for a given input x
-            z = x - optimum
-            return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
+            shaped_optimum = opt_reshape(x, optimum)
+            z = x - shaped_optimum
+            return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0) + bias
         return rastrigin
     
 TF = TestFuncts
