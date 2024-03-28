@@ -92,6 +92,86 @@ def construct_configs(dims: int, dtype):
 
     return pso_hyperparameters, domain_data, pso_config, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config
 
+def run_benchmark_objective_function():
+    logging.info(f"Running {name} function")
+    print(f"Running {name} function for {extension_name}")
+
+    function = tf.TF.generate_function(id, optimum=optimum, bias=0)
+
+    pso = pso_file.PSO(
+        pso_hyperparameters = pso_hyperparameters,
+        domain_data = domain_data,
+        function = function,
+        pso_configs = pso_config
+    )
+
+    if use_pso_logger:
+        pso = pso_file.PSOLogger(
+            pso = pso,
+            config = pso_logger_config
+        )
+
+    mpso = mpso_file.MPSO(
+        pso = pso,
+        ccd_hyperparameters = ccd_hyperparameters,
+        mpso_config = mpso_config
+    )
+
+    mpso_logger = mpso_file.MPSOLogger(
+        mpso = mpso,
+        config = mpso_logger_config
+    )
+
+    rows.extend(record_run(mpso_logger, func_name=name, mpso_runs = 30))
+
+def run_benchmark_type(track_type: int, mpso_type: int, folder_path: str, dims: int, dtype):
+    """ Run a specific type of benchmark (e.g. mpso_ccd-quality, mpso_ccd-time etc.)"""
+    configs = construct_configs(dims, dtype)
+    pso_hyperparameters = configs[0]
+    domain_data = configs[1]
+    pso_config = configs[2]
+    pso_logger_config = configs[3]
+    ccd_hyperparameters = configs[4]
+    mpso_config = configs[5]
+    mpso_logger_config = configs[6]
+    # Adjust tracking configs for whether we are doing something for quality or time
+    if track_type == QUALITY:
+        # If we are tracking quality, it is fine to track as many values as possible
+        pso_logger_config.track_quality = True
+        use_pso_logger = True
+        track_name = "quality"# to be used for storing the results of benchmark tests
+    elif track_type == TIME:
+        # If we are tracking time, limit tracking to only MPSO iterations
+        use_pso_logger = False
+        track_name = "time" # to be used for storing the results of benchmark tests
+    else:
+        raise Exception(f"{track_type} Not a valid track type")
+
+    # Adjust tracking configs based on whether we are using MPSO or MPSOCCD
+    if mpso_type == MPSO:
+        mpso_config.use_ccd = False
+        mpso_logger_config.track_ccd = False
+        mpso_name = "mpso" # to be used for storing the results of benchmark tests
+    elif mpso_type == MPSOCCD:
+        mpso_config.use_ccd = True
+        mpso_logger_config.track_ccd = True
+        mpso_name = "mpso_ccd" # to be used for storing the results of benchmark tests
+    else:
+        raise Exception(f"{mpso_type} not a valid run type")
+    
+    extension_name = f"{mpso_name}-{track_name}"
+    logging.info(f"Running {extension_name} tests")
+
+    # Run through all test functions
+    for i in range(len(tf.TESTFUNCTIDS)):
+        name = tf.TESTFUNCTSTRINGS[i]
+        id = tf.TESTFUNCTIDS[i]
+
+        if name in IGNORELIST or id in IGNORELIST:
+            continue
+        run_benchmark_objective_function()
+    
+
 def run_benchmark_tests():
     dims = 30
     dtype = np.float64
@@ -103,83 +183,16 @@ def run_benchmark_tests():
     folder_path = os.path.join(BENCHMARKFOLDER, f"Benchmark{formatted_datetime}")
     os.mkdir(folder_path)
 
-    pso_hyperparameters, domain_data, pso_config, pso_logger_config, ccd_hyperparameters, mpso_config, mpso_logger_config = construct_configs(dims, dtype)
     use_pso_logger = None
 
     # Run through every type of tracker
     for run_type in [(x, y) for x in track_types for y in mpso_types]:
         track_type = run_type[0]
         mpso_type = run_type[1]
+        run_benchmark_type(track_type = track_type, mpso_type = mpso_type, folder_path = folder_path)
 
         # rows that will be included with the dataframe
         rows = []
-
-        # Adjust tracking configs for whether we are doing something for quality or time
-        if track_type == QUALITY:
-            # If we are tracking quality, it is fine to track as many values as possible
-            pso_logger_config.track_quality = True
-            use_pso_logger = True
-            track_name = "quality"# to be used for storing the results of benchmark tests
-        elif track_type == TIME:
-            # If we are tracking time, limit tracking to only MPSO iterations
-            use_pso_logger = False
-            track_name = "time" # to be used for storing the results of benchmark tests
-        else:
-            raise Exception(f"{track_type} Not a valid track type")
-
-        # Adjust tracking configs based on whether we are using MPSO or MPSOCCD
-        if mpso_type == MPSO:
-            mpso_config.use_ccd = False
-            mpso_logger_config.track_ccd = False
-            mpso_name = "mpso" # to be used for storing the results of benchmark tests
-        elif mpso_type == MPSOCCD:
-            mpso_config.use_ccd = True
-            mpso_logger_config.track_ccd = True
-            mpso_name = "mpso_ccd" # to be used for storing the results of benchmark tests
-        else:
-            raise Exception(f"{mpso_type} not a valid run type")
-        
-        extension_name = f"{mpso_name}-{track_name}"
-        logging.info(f"Running {extension_name} tests")
-        
-        # Run through all test functions
-        for i in range(len(tf.TESTFUNCTIDS)):
-            name = tf.TESTFUNCTSTRINGS[i]
-            id = tf.TESTFUNCTIDS[i]
-
-            if name in IGNORELIST or id in IGNORELIST:
-                continue
-
-            logging.info(f"Running {name} function")
-            print(f"Running {name} function for {extension_name}")
-
-            function = tf.TF.generate_function(id, optimum=optimum, bias=0)
-
-            pso = pso_file.PSO(
-                pso_hyperparameters = pso_hyperparameters,
-                domain_data = domain_data,
-                function = function,
-                pso_configs = pso_config
-            )
-
-            if use_pso_logger:
-                pso = pso_file.PSOLogger(
-                    pso = pso,
-                    config = pso_logger_config
-                )
-
-            mpso = mpso_file.MPSO(
-                pso = pso,
-                ccd_hyperparameters = ccd_hyperparameters,
-                mpso_config = mpso_config
-            )
-
-            mpso_logger = mpso_file.MPSOLogger(
-                mpso = mpso,
-                config = mpso_logger_config
-            )
-
-            rows.extend(record_run(mpso_logger, func_name=name, mpso_runs = 30))
 
         # folder name for the benchmarktest
         dataclasses = [
