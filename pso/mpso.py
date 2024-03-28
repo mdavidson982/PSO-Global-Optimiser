@@ -20,7 +20,6 @@ class MPSO:
     mpso_config: dc.MPSOConfigs
     ccd_hyperparameters: dc.CCDHyperparameters
     iterations: int = 0
-    
     g_best: p.ADTYPE = None
 
     def __init__(self, 
@@ -31,14 +30,17 @@ class MPSO:
         self.pso = pso
         self.mpso_config = mpso_config
         self.ccd_hyperparameters = ccd_hyperparameters
-        self.g_best = None
-        self.iterations = 0
+        self.initialize()
 
         if mpso_config.use_ccd:
             if ccd_hyperparameters is None:
                 raise Exception("Configuration set to use ccd, but no hyperparameters supplied.")
             if not self.ccd_hyperparameters.has_valid_learning_params():
                 raise Exception("Bad learning parameters for CCD")
+            
+    def initialize(self) -> None:
+        self.g_best = None
+        self.iterations = 0
             
     def run_PSO(self) -> None:
         self.pso.run_PSO(self.g_best)
@@ -70,6 +72,7 @@ class MPSO:
         self.iterations += 1
         
     def run_mpso(self) -> None:
+        self.initialize()
         """Runs a full instance of MPSO, optionally with CCD"""
         while self.iterations < self.mpso_config.iterations:
             self.run_iteration()
@@ -144,6 +147,7 @@ class MPSOLogger:
         self.mpso.iterations += 1
 
     def run_mpso(self) -> None:
+        self.mpso.initialize()
         while self.mpso.iterations < self.mpso.mpso_config.iterations:
             self.run_iteration()
 
