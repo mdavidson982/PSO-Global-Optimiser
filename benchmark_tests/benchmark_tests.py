@@ -34,9 +34,17 @@ class BenchmarkTester:
     dtype: any
     folder_path: str
 
+
     def __init__(self, dims: int, dtype):
         self.dims = dims
         self.dtype = dtype
+
+    def _make_benchmark_type_folder(self, extension_name: str):
+        benchmark_type_folder = os.path.join(self.folder_path, extension_name)
+        
+
+    def _run_benchmark_objective(self, mpso_logger: mpso_file.MPSOLogger):
+
 
     def _run_benchmark_type(self, track_type: int, mpso_type: int):
         mpso_logger = construct_MPSO(track_type=track_type, mpso_type=mpso_type)
@@ -52,6 +60,7 @@ class BenchmarkTester:
         extension_name = f"{mpso_name}-{track_name}"
 
         logging.info(f"Running {extension_name} tests")
+        self._make_benchmark_type_folder(extension_name)
 
         for i in range(len(tf.TESTFUNCTIDS)):
             name = tf.TESTFUNCTSTRINGS[i]
@@ -60,11 +69,14 @@ class BenchmarkTester:
             if name in IGNORELIST or id in IGNORELIST:
                 continue
 
-
     def run_benchmark_tests(self):
         """ Run all benchmark tests """
         self._make_benchmark_folder()
 
+        for run_type in [(x, y, z) for x in track_types for y in mpso_types for z in tf.TESTFUNCTSTRINGS]
+            
+            mpso_logger = construct_MPSO(track_type=track_type, mpso_type=mpso_type)
+        
         for run_type in [(x, y) for x in track_types for y in mpso_types]:
             track_type = run_type[0]
             mpso_type = run_type[1]
@@ -95,7 +107,7 @@ def record_run(runner: mpso_file.MPSOLogger, func_name: str, mpso_runs: int = 30
     return rows
 
 
-def construct_MPSO(dims: int, dtype, track_type: int, mpso_type: int):
+def construct_MPSO(track_type: int, mpso_type: int):
     # folder name for the benchmarktest
     pso_hyperparameters = "pso_hyperparameters"
     domain_data = "domain_data"
@@ -268,14 +280,11 @@ def run_benchmark_tests():
     folder_path = os.path.join(BENCHMARKFOLDER, f"Benchmark{formatted_datetime}")
     os.mkdir(folder_path)
 
-
     # Run through every type of tracker
     for run_type in [(x, y) for x in track_types for y in mpso_types]:
         track_type = run_type[0]
         mpso_type = run_type[1]
         run_benchmark_type(track_type = track_type, mpso_type = mpso_type, folder_path = folder_path)
-
-
 
         # rows that will be included with the dataframe
         rows = []

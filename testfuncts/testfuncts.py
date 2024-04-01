@@ -84,23 +84,23 @@ class TestFuncts:
 
         if functionID == SPHEREID or functionID == SPHERESTRING:
             func = TF._sphere_gen
-        elif functionID == SHIFTEDSCHWEFELID:
+        elif functionID == SHIFTEDSCHWEFELID or functionID == SHIFTEDSCHWEFELSTRING:
             func = TF._schwefel_gen
-        elif functionID == SHIFTEDELLIPTICID:
+        elif functionID == SHIFTEDELLIPTICID or functionID == SHIFTEDELLIPTICSTRING:
             func = TF._shifted_elliptic_gen
-        elif functionID == SCHWEFELID:
+        elif functionID == SCHWEFELID or functionID == SCHWEFELSTRING:
             func = TF._schwefel_gen
-        elif functionID == SCHWEFELGOBID:
+        elif functionID == SCHWEFELGOBID or functionID == SCHWEFELGOBSTRING:
             func = TF._schwefel_gob_gen
         elif functionID == ROSENBROCKID or functionID == ROSENBROCKSTRING:
             func = TF._rosenbrock_gen
-        elif functionID == GRIEWANKID:
+        elif functionID == GRIEWANKID or functionID == GRIEWANKSTRING:
             func = TF._griewank_gen
-        elif functionID == SHIFTEDROTATEDACKLEYID:
+        elif functionID == SHIFTEDROTATEDACKLEYID or functionID == SHIFTEDROTATEDACKLEYSTRING:
             func = TF._shifted_rotated_ackley_gen
         elif functionID == RASTRIGINID or functionID == RASTRIGINSTRING:
             func = TF._rastrigin_gen
-        elif functionID == ROTATEDRASTRIGINID:
+        elif functionID == ROTATEDRASTRIGINID or functionID == ROTATEDRASTRIGINSTRING:
             func = TF._rotatedRastrigin_gen
         else:
             raise Exception(f"functionID {functionID} does not match any available option")

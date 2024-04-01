@@ -200,3 +200,4 @@ class MPSOConfigs:
     """
     use_ccd: bool = True
     iterations: int = 30
+    seed: int = int(time.time())

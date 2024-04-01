@@ -74,6 +74,7 @@ class PSO:
 
     def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Run initialization to get necessary matrices"""
+
         pos_matrix, vel_matrix, p_best, g_best, v_max = initializer(
             num_part=self.pso_hypers.num_part, 
             num_dim=self.pso_hypers.num_dim, 
@@ -152,6 +153,12 @@ class PSO:
         self.iteration += 1
 
         return self.should_terminate()
+    
+    def set_seed(self, random_state):
+        if random_state >= 0:
+            np.random.seed(random_state)
+        elif random_state < 0:
+            np.random.seed(self.pso_configs.seed)
 
     def should_terminate(self) -> bool:
         """Helper function which determines if the instance should terminate"""
@@ -175,8 +182,15 @@ class PSO:
         """Return the value of the current gbest"""
         return self.g_best[-1]
     
-    def run_PSO(self, start_g_best: p.ADTYPE | None = None):
-        """Runs an instance of PSO"""
+    def run_PSO(self, start_g_best: p.ADTYPE | None = None, random_state: int | None = None):
+        """Runs an instance of PSO.  
+        start_g_best:  initial g_best for PSO.
+        random_state:  Random state to run PSO.  Three options:
+            positive integer: use this random state.
+            None:  Don't reseed
+            negative integer:  use the random state stored in the config.
+        """
+        self.set_seed(random_state)
         self.initialize(start_g_best=start_g_best)
         shouldTerminate = False
 
@@ -241,8 +255,9 @@ class PSOLogger:
         self.record_row()
         return should_terminate
     
-    def run_PSO(self, start_g_best: p.ADTYPE | None = None) -> None:
+    def run_PSO(self, start_g_best: p.ADTYPE | None = None, random_state: int | None = None) -> None:
         """Runs an instance of PSO"""
+        self.pso.set_seed(random_state)
         self.initialize(start_g_best=start_g_best)
         shouldTerminate = False
 
@@ -272,8 +287,8 @@ class PSOInterface:
         """
         pass
 
-    def run_PSO(self, start_g_best: p.ADTYPE | None = None) -> None:
-        """Runs an instance of PSO"""
+    def run_PSO(self, start_g_best: p.ADTYPE | None = None, random_state: int | None = None) -> None:
+        """Runs an instance of PSO."""
         pass
 
     @property

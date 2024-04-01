@@ -4,6 +4,7 @@ import utils.parameters as p
 from utils.util import np_to_json
 import pandas as pd
 from time import time_ns
+from numpy import random
 
 # Non-graphical runner
 class MPSO:
@@ -43,7 +44,7 @@ class MPSO:
         self.iterations = 0
             
     def run_PSO(self) -> None:
-        self.pso.run_PSO(self.g_best)
+        self.pso.run_PSO(self.g_best, random_state = None)
         self.g_best = self.pso.pso.g_best
 
     def run_CCD(self) -> None:
@@ -60,6 +61,12 @@ class MPSO:
             func = self.pso.pso.function
         )
 
+    def set_seed(self, random_state):
+        if random_state >= 0:
+            random.seed(random_state)
+        elif random_state < 0:
+            random.seed(self.mpso_config.seed)
+
     def run_iteration(self) -> None:
         """
         Run a single iteration of PSO, optionally followed by CCD.
@@ -71,7 +78,8 @@ class MPSO:
             self.run_CCD()
         self.iterations += 1
         
-    def run_mpso(self) -> None:
+    def run_mpso(self, random_state: int | None = None) -> None:
+        self.set_seed(random_state)
         self.initialize()
         """Runs a full instance of MPSO, optionally with CCD"""
         while self.iterations < self.mpso_config.iterations:
@@ -146,7 +154,8 @@ class MPSOLogger:
         self.rows.append(current_row)
         self.mpso.iterations += 1
 
-    def run_mpso(self) -> None:
+    def run_mpso(self, random_state: int | None = None) -> None:
+        self.mpso.set_seed(random_state)
         self.mpso.initialize()
         while self.mpso.iterations < self.mpso.mpso_config.iterations:
             self.run_iteration()

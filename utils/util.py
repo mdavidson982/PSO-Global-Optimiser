@@ -7,6 +7,8 @@ import os
 import time
 import json
 
+
+
 def scale(lb: p.ADTYPE, ub: p.ADTYPE, array: p.ADTYPE) -> p.ADTYPE:
     """
     Take an array of values 0-1, and scale them to a new space. 
