@@ -29,7 +29,7 @@ class PSOTester(unittest.TestCase):
             mv_iteration = 10
         )
 
-        domain_data = dc.DomainData(
+        domain_data = dc.FunctionData(
             upper_bound = np.ones(num_dim)*100,
             lower_bound = np.ones(num_dim)*-100
         )

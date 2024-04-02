@@ -1,26 +1,21 @@
-from typing import TypeVar
+import os
+import shutil
+import testfuncts.testfuncts as tf
+import json
+import numpy as np
+import pso.codec as codec
 
-T = TypeVar('T')
-
-def add_type_hints(cls):
-    def decorator(func):
-        setattr(cls, func.__name__, func)
-        
-        # Add type hints for the new method
-        func.__annotations__["self"] = cls
-        func.__annotations__["return"] = T
-        
-        # Add a docstring for the new method
-        if not func.__doc__:
-            func.__doc__ = "This is a dynamically added method."
-        
-        return func
-    return decorator
-
-@add_type_hints
-class MyClass:
-    def new_method(self: 'MyClass', arg: str) -> str:
-        """A new dynamically added method."""
-        return f"New method called with argument: {arg}"
-
-
+mypath = os.path.join("benchmark_tests", "configs")
+files = os.listdir(mypath)
+for funct in tf.TESTFUNCTSTRINGS:
+    print(funct)
+    functpath = os.path.join(mypath, funct)
+    print(os.path.exists(functpath))
+    print(os.path.exists(os.path.join(functpath, "domain_data.json")))
+    
+    with open(os.path.join(functpath,"domain_data.json")) as file:
+        z = json.load(file)
+    z["optimum"] = [0]*30
+    z["bias"] = 0
+    with open(os.path.join(functpath, "domain_data.json"), "w+") as file:
+        json.dump(z, file)

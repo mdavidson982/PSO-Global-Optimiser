@@ -1,3 +1,7 @@
+"""Run via 
+python3 -m unittest psofuncts/test_psofuncts.py
+"""
+
 import unittest
 from . import initializer, update, ccd
 import logging

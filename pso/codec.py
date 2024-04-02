@@ -60,3 +60,18 @@ def json_file_to_dataclass(file: TextIOWrapper):
     hook_function = _decoder_func(dataclass.decode_json_hooks)
     dataclass_dict = json.load(file, object_hook=hook_function)
     return dataclass(**dataclass_dict[_DATA])
+
+if False:
+    mypath = os.path.join("benchmark_tests", "configs")
+    files = os.listdir(mypath)
+    for funct in tf.TESTFUNCTSTRINGS:
+        functpath = os.path.join(mypath, funct)
+        
+
+        with open(os.path.join(functpath,"domain_data.json"), "r") as file:
+            
+            z = codec.json_file_to_dataclass(file)
+        z.optimum = np.zeros(30)
+        z.bias = 0
+        with open(os.path.join(functpath, "domain_data.json"), "w+") as file:
+            codec.dataclass_to_json_file(z, file)

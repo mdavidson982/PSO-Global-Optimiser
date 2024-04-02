@@ -2,6 +2,7 @@ import numpy as np
 import utils.parameters as p
 import utils.util as u
 import utils.consts as c
+from pso.psodataclass import FunctionData
 
 SPHEREID = 1
 SPHERESTRING = "sphere"
@@ -78,7 +79,26 @@ def create_orthogonal_matrix(n):
 
 class TestFuncts:
 
-    def generate_function(functionID, optimum: p.ADTYPE, bias: p.DTYPE):
+    def generate_function(
+            functionID: str | int = None, 
+            optimum: p.ADTYPE = None, 
+            bias: p.DTYPE = None,
+            domaindata: FunctionData = None,
+        ):
+        if domaindata is not None:
+            return TestFuncts._generate_function_helper(
+                functionID = functionID,
+                optimum = domaindata.optimum,
+                bias = domaindata.bias
+            )
+        else:
+            return TestFuncts._generate_function_helper(
+                functionID = functionID,
+                optimum = optimum,
+                bias = bias
+            )
+
+    def _generate_function_helper(functionID, optimum: p.ADTYPE, bias: p.DTYPE):
         if type(functionID) == str:
             functionID = str.strip(functionID).lower()
 

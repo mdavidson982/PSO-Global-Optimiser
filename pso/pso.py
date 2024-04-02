@@ -44,7 +44,7 @@ class PSO:
     iterations:         current iteration of the instance
     """
     pso_hypers: dc.PSOHyperparameters
-    domain_data: dc.DomainData
+    domain_data: dc.FunctionData
     pso_configs: dc.PSOConfig
     function: any
     v_max: p.ADTYPE
@@ -57,7 +57,7 @@ class PSO:
 
     def __init__(self, 
         pso_hyperparameters: dc.PSOHyperparameters,
-        domain_data: dc.DomainData,
+        domain_data: dc.FunctionData,
         function: any,
         pso_configs: dc.PSOConfig = dc.PSOConfig()
     ):
@@ -155,6 +155,8 @@ class PSO:
         return self.should_terminate()
     
     def set_seed(self, random_state):
+        if random_state == None:
+            return
         if random_state >= 0:
             np.random.seed(random_state)
         elif random_state < 0:
@@ -210,6 +212,7 @@ class PSOLogger:
     pso: PSO = None
     config: dc.PSOLoggerConfig
     rows: list[dict] = []
+    start_time: int = None
 
     def __init__(self, 
         pso: PSO, 
@@ -217,7 +220,7 @@ class PSOLogger:
     ):
         self.pso = pso
         self.config = config
-        self.rows = []
+        self.clear_rows()
 
     def record_row(self) -> None:
         """Record values for a specific iteration of PSO"""
@@ -230,13 +233,16 @@ class PSOLogger:
             })
         if self.config.track_time:
             current_row.update({
-                "time": time.time_ns(),
+                "time": time.time_ns() - self.start_time,
             })
         self.rows.append(current_row)
 
+    def clear_rows(self):
+        self.rows = []
+
     def return_results(self) -> pd.DataFrame:
         """Return the results of the logger as a dataframe"""
-        return pd.DataFrame(self.rows)
+        return self.rows
     
     def write_results_to_json(self, filepath: str):
         """Write this specific dataframe to json"""
@@ -244,6 +250,7 @@ class PSOLogger:
 
     def initialize(self, start_g_best: p.ADTYPE | None = None) -> None:
         """Run initialization to get necessary matrices"""
+        self.start_time = time.time_ns()
         self.pso.initialize(start_g_best=start_g_best)
         self.record_row()
         
@@ -258,6 +265,7 @@ class PSOLogger:
     def run_PSO(self, start_g_best: p.ADTYPE | None = None, random_state: int | None = None) -> None:
         """Runs an instance of PSO"""
         self.pso.set_seed(random_state)
+        self.clear_rows()
         self.initialize(start_g_best=start_g_best)
         shouldTerminate = False
 
@@ -308,7 +316,7 @@ def test_run_pso():
         mv_iteration=p.NO_MOVEMENT_TERMINATION
     )
 
-    domain_data = dc.DomainData(
+    domain_data = dc.FunctionData(
         upper_bound = p.UPPER_BOUND,
         lower_bound = p.LOWER_BOUND
     )

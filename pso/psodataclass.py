@@ -110,7 +110,7 @@ class CCDHyperparameters:
 
 @_PsoDataClass 
 @dataclass
-class DomainData:
+class FunctionData:
     """
     Class that holds information about the objective function's
     domain for PSO
@@ -120,6 +120,8 @@ class DomainData:
     """
     upper_bound: p.ADTYPE
     lower_bound: p.ADTYPE
+    optimum: p.ADTYPE
+    bias: p.ADTYPE
 
 @_PsoDataClass
 @dataclass

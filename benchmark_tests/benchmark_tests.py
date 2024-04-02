@@ -1,9 +1,11 @@
+import time
 from pso import pso as pso_file, mpso as mpso_file, psodataclass as dc, codec
 import testfuncts.testfuncts as tf
 import numpy as np
 import pandas as pd
 import os
 import logging
+import itertools
 
 from datetime import datetime
 import warnings
@@ -20,7 +22,7 @@ MPSOCCD = 1
 
 mpso_types = [MPSO, MPSOCCD]
 
-BENCHMARKFOLDER = "benchmarkruns"
+RESULTSFOLDER = os.path.join("benchmark_tests", "benchmarkruns")
 CONFIG_FOLDER = os.path.join("benchmark_tests", "configs")
 
 IGNORELIST = [tf.SHIFTEDELLIPTICID, 
@@ -34,7 +36,6 @@ class BenchmarkTester:
     dtype: any
     folder_path: str
 
-
     def __init__(self, dims: int, dtype):
         self.dims = dims
         self.dtype = dtype
@@ -44,10 +45,10 @@ class BenchmarkTester:
         
 
     def _run_benchmark_objective(self, mpso_logger: mpso_file.MPSOLogger):
-
+        pass
 
     def _run_benchmark_type(self, track_type: int, mpso_type: int):
-        mpso_logger = construct_MPSO(track_type=track_type, mpso_type=mpso_type)
+        mpso_logger = _construct_MPSO(track_type=track_type, mpso_type=mpso_type)
         if track_type == QUALITY:
             track_name = "quality"
         elif track_type == TIME:
@@ -69,29 +70,6 @@ class BenchmarkTester:
             if name in IGNORELIST or id in IGNORELIST:
                 continue
 
-    def run_benchmark_tests(self):
-        """ Run all benchmark tests """
-        self._make_benchmark_folder()
-
-        for run_type in [(x, y, z) for x in track_types for y in mpso_types for z in tf.TESTFUNCTSTRINGS]
-            
-            mpso_logger = construct_MPSO(track_type=track_type, mpso_type=mpso_type)
-        
-        for run_type in [(x, y) for x in track_types for y in mpso_types]:
-            track_type = run_type[0]
-            mpso_type = run_type[1]
-            self._run_benchmark_type(track_type = track_type, mpso_type = mpso_type)
-
-    def _make_benchmark_folder(self):
-        """Makes a run for the overall benchmark folder"""
-        formatted_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-        self.folder_path = os.path.join(BENCHMARKFOLDER, f"Benchmark{formatted_datetime}")
-        os.mkdir(self.folder_path)
-
-    
-
-
-
 def record_run(runner: mpso_file.MPSOLogger, func_name: str, mpso_runs: int = 30):
     rows = []
     for i in range(mpso_runs):
@@ -106,54 +84,100 @@ def record_run(runner: mpso_file.MPSOLogger, func_name: str, mpso_runs: int = 30
         rows.append(row)
     return rows
 
+def _make_benchmark_folder():
+    """Makes a run for the overall benchmark folder"""
+    formatted_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    folder_path = os.path.join(RESULTSFOLDER, f"Benchmark{formatted_datetime}")
+    os.mkdir(folder_path)
+    return folder_path
 
-def construct_MPSO(track_type: int, mpso_type: int):
+def _make_benchmark_test_folder(benchmark_path: str, extension: str):
+    """Makes a directory for every individual test"""
+    extension_path = os.path.join(benchmark_path, extension)
+    os.mkdir(extension_path)
+    return extension_path
+
+def _make_replicate_path(benchmark_test_path: str, replicate: int):
+    replicate_path = os.path.join(benchmark_test_path, f"MPSO-Iteration{replicate}")
+    os.mkdir(replicate_path)
+    return replicate_path
+
+def _make_pso_path(data_path, pso_iteration: int):
+    data_path = os.path.join(data_path, f"PSO-Iteration{pso_iteration}")
+    os.mkdir(data_path)
+    return data_path
+
+def record_mpso_iteration(logger: mpso_file.MPSOLogger, path: str):
+    mpso_results = logger.rows[-1]
+    if "PSOData" in list(mpso_results.keys()):
+        pso_path = os.path.join(path, "PSOData.csv")
+        pd.DataFrame(mpso_results["PSOData"]).to_csv(pso_path)
+        del logger.rows[-1]["PSOData"]
+
+def run_benchmark_tests(replicates: int = 30, seed: int = int(time.time())):
+    np.random.seed(seed)
+    """ Run all benchmark tests """
+    test_path = _make_benchmark_folder()
+
+    for track_type, mpso_type, function_name in itertools.product(track_types, mpso_types, tf.TESTFUNCTSTRINGS):
+        extension_name = _build_extension_name(track_type, mpso_type, function_name)
+        extension_path = _make_benchmark_test_folder(test_path, extension_name)
+        mpso_logger = _construct_MPSO(track_type=track_type, mpso_type=mpso_type, functionID = function_name)
+
+        for i in range(replicates):
+            replicate_path = _make_replicate_path(extension_path, i)
+            mpso_logger.run_mpso(random_state = None)
+            record_mpso_iteration(mpso_logger, replicate_path)
+            
+
+def _build_extension_name(track_type: int, mpso_type: int, functionID: str):
+    if track_type == QUALITY:
+        track_name = "quality"
+    elif track_type == TIME:
+        track_name = "time"
+    
+    if mpso_type == MPSO:
+        mpso_name = "mpso"
+    elif mpso_type == MPSOCCD:
+        mpso_name = "mpsoccd"
+    extension_name = f"{mpso_name}-{track_name}-{functionID}"
+    return extension_name
+
+def _construct_MPSO(track_type: int, mpso_type: int, functionID):
     # folder name for the benchmarktest
-    pso_hyperparameters = "pso_hyperparameters"
-    domain_data = "domain_data"
-    pso_config = "pso_config"
-    pso_logger_config = "pso_logger_config"
-    ccd_hyperparameters = "ccd_hyperparameters"
-    mpso_config = "mpso_config"
-    mpso_logger_config = "mpso_logger_config"
-
-    dataclass_file_names = [
-        pso_hyperparameters,
-        domain_data,
-        pso_config,
-        pso_logger_config,
-        ccd_hyperparameters,
-        mpso_config,
-        mpso_logger_config
-    ]
-
     dataclasses = {}
+    path_name = os.path.join(CONFIG_FOLDER, functionID)
+    config_names = os.listdir(path_name)
+    for config_name in config_names:
+        with open(os.path.join(path_name, config_name)) as file:
+            dataclasses[config_name[:-len(".json")]] = codec.json_file_to_dataclass(file)
 
-    for file_name in dataclass_file_names:
-        with open(os.path.join(CONFIG_FOLDER, file_name+".json")) as file:
-            dataclasses[file_name] = [codec.json_file_to_dataclass(file)]
-
-    with open(os.path.join(CONFIG_FOLDER, "pso_hyperparameters")) as file:
-        pso_hyperparameters = codec.json_file_to_dataclass(file)
+    pso_logger_config: dc.PSOLoggerConfig = dataclasses["pso_logger_config"]
+    mpso_logger_config: dc.MPSOLoggerConfig = dataclasses["mpso_logger_config"]
+    mpso_config: dc.MPSOConfigs = dataclasses["mpso_config"]
+    domain_data: dc.FunctionData = dataclasses["domain_data"]
+    pso_hyperparameters: dc.PSOHyperparameters = dataclasses["pso_hyperparameters"]
+    pso_config: dc.PSOConfig = dataclasses["pso_config"]
+    ccd_hyperparameters: dc.CCDHyperparameters = dataclasses["ccd_hyperparameters"]
     
     if track_type == QUALITY:
         # If we are tracking quality, it is fine to track as many values as possible
-        dataclasses[pso_logger_config].track_quality = True
-        dataclasses[pso_logger_config].track_time = True
-        dataclasses[mpso_logger_config].track_quality = True
-        dataclasses[mpso_logger_config].track_time = True
+        pso_logger_config.track_quality = True
+        pso_logger_config.track_time = True
+        mpso_logger_config.track_quality = True
+        mpso_logger_config.track_time = True
         use_pso_logger = True
     elif track_type == TIME:
         # If we are tracking time, limit tracking to only MPSO iterations
-        dataclasses[mpso_logger_config].track_quality = False
-        dataclasses[mpso_logger_config].track_time = True
+        mpso_logger_config.track_quality = False
+        mpso_logger_config.track_time = True
         use_pso_logger = False
     else:
         raise Exception(f"{track_type} Not a valid track type")
     
     # Adjust tracking configs based on whether we are using MPSO or MPSOCCD
     if mpso_type == MPSO:
-        dataclasses[mpso_config].use_ccd = False
+        mpso_config.use_ccd = False
         mpso_logger_config.track_ccd = False
     elif mpso_type == MPSOCCD:
         mpso_config.use_ccd = True
@@ -161,28 +185,30 @@ def construct_MPSO(track_type: int, mpso_type: int):
     else:
         raise Exception(f"{mpso_type} not a valid run type")
     
+    function = tf.TF.generate_function(functionID, optimum = domain_data.optimum, bias=domain_data.bias)
+    
     pso = pso_file.PSO(
-        pso_hyperparameters=dataclasses[pso_hyperparameters],
-        domain_data = dataclasses[domain_data],
-        function = None,
-        pso_configs = dataclasses[pso_config]
+        pso_hyperparameters=pso_hyperparameters,
+        domain_data = domain_data,
+        function = function,
+        pso_configs = pso_config
     )
 
     if use_pso_logger:
         pso = pso_file.PSOLogger(
             pso = pso,
-            config = dataclasses[pso_logger_config]
+            config = pso_logger_config
         )
 
     mpso = mpso_file.MPSO(
         pso=pso,
-        mpso_config = dataclasses[mpso_config],
-        ccd_hyperparameters=dataclasses[ccd_hyperparameters]
+        mpso_config = mpso_config,
+        ccd_hyperparameters = ccd_hyperparameters
     )
 
     mpso_logger = mpso_file.MPSOLogger(
         mpso = mpso,
-        config = dataclasses[mpso_logger_config]
+        config = mpso_logger_config
     )
 
     return mpso_logger
@@ -277,7 +303,7 @@ def run_benchmark_tests():
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H-%M-%S")
     
     # Folder 
-    folder_path = os.path.join(BENCHMARKFOLDER, f"Benchmark{formatted_datetime}")
+    folder_path = os.path.join(RESULTSFOLDER, f"Benchmark{formatted_datetime}")
     os.mkdir(folder_path)
 
     # Run through every type of tracker
@@ -321,4 +347,5 @@ def run_benchmark_tests():
 
     print("Finished running test functions")
 
-run_benchmark_tests()
+#run_benchmark_tests()
+    

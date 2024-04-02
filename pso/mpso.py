@@ -62,6 +62,8 @@ class MPSO:
         )
 
     def set_seed(self, random_state):
+        if random_state == None:
+            return
         if random_state >= 0:
             random.seed(random_state)
         elif random_state < 0:
@@ -73,7 +75,7 @@ class MPSO:
         temp_g_best is used as a starting point for the next pso instance, and will be
         overwritten by the result of CCD if CCD is enabled.
         """
-        self.run_PSO(self.g_best)
+        self.run_PSO()
         if self.mpso_config.use_ccd:
             self.run_CCD()
         self.iterations += 1
@@ -85,15 +87,25 @@ class MPSO:
         while self.iterations < self.mpso_config.iterations:
             self.run_iteration()
 
+    def get_g_best_coords(self) -> p.ADTYPE:
+        """Return the coordinates of the current gbest"""
+        return self.g_best[:-1]
+    
+    def get_g_best_value(self) -> p.DTYPE:
+        """Return the value of the current gbest"""
+        return self.g_best[-1]
+
 class MPSOLogger:
     """Wrapper for the MPSO object, that enables logging of the run."""
     mpso: MPSO
     config: dc.MPSOLoggerConfig
     rows: list[dict] = []
+    start_time: int = None
 
     def __init__(self, mpso: MPSO, config: dc.MPSOLoggerConfig = dc.MPSOLoggerConfig()):
         self.mpso = mpso
         self.config = config
+        self.clear_rows()
 
     def _check_PSOLogger(self):
         """Check to see if the underlying pso object is a logger"""
@@ -107,12 +119,14 @@ class MPSOLogger:
         """Write this specific dataframe to json"""
         self.return_results().to_json(filepath)
 
+    def clear_rows(self):
+        self.rows = []
+
     def run_iteration(self) -> None:
         """Runs an iteration of the underlying mpso object, and records any
         pertinent values.
         """
 
-        pso_obj = self.mpso.pso.pso
         current_row = {}
         # Run an iteration of the underlying mpso object
         self.mpso.run_PSO()
@@ -120,15 +134,15 @@ class MPSOLogger:
         # Track time it took to get to the solution
         if self.config.track_time:
             current_row.update({
-                "time": time_ns(),
+                "time": time_ns() - self.start_time,
             })
         
         # Track quality of solution
         if self.config.track_quality:
             current_row.update({
                 "mpso_iteration": self.mpso.iterations,
-                "g_best_coords": np_to_json(pso_obj.get_g_best_coords()),
-                "g_best_value": pso_obj.get_g_best_value(),
+                "g_best_coords": np_to_json(self.mpso.get_g_best_coords()),
+                "g_best_value": self.mpso.get_g_best_value(),
             })
 
         if self.mpso.mpso_config.use_ccd: 
@@ -137,19 +151,19 @@ class MPSOLogger:
             if self.config.track_ccd:
                 if self.config.track_time:
                     current_row.update({
-                        "time": time_ns()
+                        "time_ccd": time_ns() - self.start_time
                     })
                 if self.config.track_quality:
                     current_row.update({
-                        "g_best_coords_ccd": np_to_json(pso_obj.get_g_best_coords()),
-                        "g_best_value_ccd": pso_obj.get_g_best_value()
+                        "g_best_coords_ccd": np_to_json(self.mpso.get_g_best_coords()),
+                        "g_best_value_ccd": self.mpso.get_g_best_value()
                     })
             
         # If the underlying pso object is a logger object, 
         # add this as a column.
         if self._check_PSOLogger():
             current_row.update({
-                "PSODataframe": self.mpso.pso.return_results()
+                "PSOData": self.mpso.pso.return_results()
             })
         self.rows.append(current_row)
         self.mpso.iterations += 1
@@ -158,6 +172,7 @@ class MPSOLogger:
         self.mpso.set_seed(random_state)
         self.mpso.initialize()
         while self.mpso.iterations < self.mpso.mpso_config.iterations:
+            self.start_time = time_ns()
             self.run_iteration()
 
 class MPSOInterface:
@@ -169,5 +184,5 @@ class MPSOInterface:
         overwritten by the result of CCD if CCD is enabled.
         """
 
-    def run_mpso(self) -> None:
+    def run_mpso(self, random_state: int) -> None:
         """Runs a full instance of MPSO, optionally with CCD"""

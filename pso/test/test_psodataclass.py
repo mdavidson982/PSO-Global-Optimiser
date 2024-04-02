@@ -91,7 +91,7 @@ class PSOCodecTester(DataTester):
         # NOTE the values used below should not be used as a basis for constructing mpso instances
         upper_bound = np.ones(shape=(5, 2))
         lower_bound = np.ones(5)*-1
-        expected_domaindata = dc.DomainData(
+        expected_domaindata = dc.FunctionData(
             upper_bound=upper_bound,
             lower_bound=lower_bound
         )
@@ -112,7 +112,7 @@ class PSOCodecTester(DataTester):
     def test_read_in(self):
         file_names = [(file_name[0]+".json", file_name[1]) for file_name in [
             ("ccdparams", dc.CCDHyperparameters),
-            ("domain", dc.DomainData),
+            ("domain", dc.FunctionData),
             ("hparams", dc.PSOHyperparameters),
             ("loggerconfig", dc.PSOLoggerConfig),
             ("mpsoconfig", dc.MPSOConfigs),
