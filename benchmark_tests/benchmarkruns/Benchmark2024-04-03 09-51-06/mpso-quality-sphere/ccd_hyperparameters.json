@@ -1,0 +1,1 @@
+{"datatype": "CCDHyperparameters", "data": {"ccd_alpha": 0.3, "ccd_max_its": 20, "ccd_tol": 1e-06, "ccd_third_term_its": 4}}

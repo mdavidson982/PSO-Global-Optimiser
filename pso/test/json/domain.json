@@ -1,8 +1,22 @@
 {
-"datatype": "DomainData", 
-"data":
-    {
-        "upper_bound": [[1, 2, 3], [7, 8, 9]],
-        "lower_bound": [4, 5, 6]
+    "datatype": "FunctionData",
+    "data": {
+        "upper_bound": [
+            [
+                1,
+                2,
+                3
+            ],
+            [
+                7,
+                8,
+                9
+            ]
+        ],
+        "lower_bound": [
+            4,
+            5,
+            6
+        ]
     }
 }

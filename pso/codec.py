@@ -59,6 +59,7 @@ def json_file_to_dataclass(file: TextIOWrapper):
     # Return its respective hooks, needed for decoding
     hook_function = _decoder_func(dataclass.decode_json_hooks)
     dataclass_dict = json.load(file, object_hook=hook_function)
+    print(dataclass_dict[_DATA])
     return dataclass(**dataclass_dict[_DATA])
 
 if False:

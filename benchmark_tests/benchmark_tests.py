@@ -6,6 +6,7 @@ import pandas as pd
 import os
 import logging
 import itertools
+import json
 
 from datetime import datetime
 import warnings
@@ -25,50 +26,11 @@ mpso_types = [MPSO, MPSOCCD]
 RESULTSFOLDER = os.path.join("benchmark_tests", "benchmarkruns")
 CONFIG_FOLDER = os.path.join("benchmark_tests", "configs")
 
-IGNORELIST = [tf.SHIFTEDELLIPTICID, 
-              tf.GRIEWANKID, 
-              tf.SHIFTEDROTATEDACKLEYID,
-              tf.ROTATEDRASTRIGINID
+IGNORELIST = [tf.SHIFTEDELLIPTICSTRING, 
+              tf.GRIEWANKSTRING, 
+              tf.SHIFTEDROTATEDACKLEYSTRING,
+              tf.ROTATEDRASTRIGINSTRING,
 ]
-
-class BenchmarkTester:
-    dims: int
-    dtype: any
-    folder_path: str
-
-    def __init__(self, dims: int, dtype):
-        self.dims = dims
-        self.dtype = dtype
-
-    def _make_benchmark_type_folder(self, extension_name: str):
-        benchmark_type_folder = os.path.join(self.folder_path, extension_name)
-        
-
-    def _run_benchmark_objective(self, mpso_logger: mpso_file.MPSOLogger):
-        pass
-
-    def _run_benchmark_type(self, track_type: int, mpso_type: int):
-        mpso_logger = _construct_MPSO(track_type=track_type, mpso_type=mpso_type)
-        if track_type == QUALITY:
-            track_name = "quality"
-        elif track_type == TIME:
-            track_name = "time"
-        
-        if mpso_type == MPSO:
-            mpso_name = "mpso"
-        elif mpso_type == MPSOCCD:
-            mpso_name = "mpsoccd"
-        extension_name = f"{mpso_name}-{track_name}"
-
-        logging.info(f"Running {extension_name} tests")
-        self._make_benchmark_type_folder(extension_name)
-
-        for i in range(len(tf.TESTFUNCTIDS)):
-            name = tf.TESTFUNCTSTRINGS[i]
-            id = tf.TESTFUNCTIDS[i]
-
-            if name in IGNORELIST or id in IGNORELIST:
-                continue
 
 def record_run(runner: mpso_file.MPSOLogger, func_name: str, mpso_runs: int = 30):
     rows = []
@@ -97,38 +59,84 @@ def _make_benchmark_test_folder(benchmark_path: str, extension: str):
     os.mkdir(extension_path)
     return extension_path
 
-def _make_replicate_path(benchmark_test_path: str, replicate: int):
-    replicate_path = os.path.join(benchmark_test_path, f"MPSO-Iteration{replicate}")
+def _make_replicate_folder(benchmark_test_path: str, replicate: int):
+    replicate_path = os.path.join(benchmark_test_path, f"MPSO-Iteration-{replicate}")
     os.mkdir(replicate_path)
     return replicate_path
 
-def _make_pso_path(data_path, pso_iteration: int):
-    data_path = os.path.join(data_path, f"PSO-Iteration{pso_iteration}")
-    os.mkdir(data_path)
-    return data_path
+def output_configs(logger: mpso_file.MPSOLogger, extension_path: str):
+    configs = [
+        (logger.config, "mpso_logger_config"),
+        (logger.mpso.mpso_config, "mpso_config"),
+        (logger.mpso.ccd_hyperparameters, "ccd_hyperparameters"),
+        (logger.mpso.pso.pso.domain_data, "domain_data"),
+        (logger.mpso.pso.pso.pso_configs, "pso_config"),
+        (logger.mpso.pso.pso.pso_hypers, "pso_hyperparameters"),
+    ]
 
-def record_mpso_iteration(logger: mpso_file.MPSOLogger, path: str):
+    if type(logger.mpso.pso) == pso_file.PSOLogger:
+        configs.append((logger.mpso.pso.config, "pso_logger_config"))
+
+    for config in configs:
+        with open(os.path.join(extension_path, config[1]+".json"), "w+") as file:
+            codec.dataclass_to_json_file(config[0], file)
+
+
+def record_mpso_iteration(logger: mpso_file.MPSOLogger, extension_path: str, iteration: int):
     mpso_results = logger.rows[-1]
     if "PSOData" in list(mpso_results.keys()):
-        pso_path = os.path.join(path, "PSOData.csv")
+        replicate_path = _make_replicate_folder(extension_path, iteration)
+        pso_path = os.path.join(replicate_path, "PSOData.csv")
         pd.DataFrame(mpso_results["PSOData"]).to_csv(pso_path)
         del logger.rows[-1]["PSOData"]
+
+def perform_statistical_analysis(df: pd.DataFrame, track_type, mpso_type, function_name):
+    new_df_data = {
+        "track_type": track_type,
+        "mpso_type": mpso_type,
+        "function_name": function_name
+    }
+
+    cols = list(df.columns)
+    
+    labels = ["time", "g_best_value", "time_ccd", "g_best_value_ccd"]
+    
+    for label in labels:
+        if label in cols:
+            new_df_data[f"average_{label}"] = df[label].mean()
+            new_df_data[f"max_{label}"] = df[label].max()
+            new_df_data[f"min_{label}"] = df[label].min()
+            new_df_data[f"std-dev{label}"] = df[label].std()
+
+    return new_df_data
 
 def run_benchmark_tests(replicates: int = 30, seed: int = int(time.time())):
     np.random.seed(seed)
     """ Run all benchmark tests """
     test_path = _make_benchmark_folder()
 
+    results = []
     for track_type, mpso_type, function_name in itertools.product(track_types, mpso_types, tf.TESTFUNCTSTRINGS):
+        if function_name in IGNORELIST:
+            continue
         extension_name = _build_extension_name(track_type, mpso_type, function_name)
         extension_path = _make_benchmark_test_folder(test_path, extension_name)
         mpso_logger = _construct_MPSO(track_type=track_type, mpso_type=mpso_type, functionID = function_name)
 
         for i in range(replicates):
-            replicate_path = _make_replicate_path(extension_path, i)
             mpso_logger.run_mpso(random_state = None)
-            record_mpso_iteration(mpso_logger, replicate_path)
-            
+            record_mpso_iteration(mpso_logger, extension_path, i)
+            if "PSOData" in list(mpso_logger.rows[:-1].keys()):
+                del mpso_logger.rows[:-1]["PSOData"]
+
+        output_configs(mpso_logger, extension_path)
+        output_csv_path = os.path.join(extension_path, "MPSORuns.csv")
+        df = pd.DataFrame(mpso_logger.rows)
+        df.to_csv(output_csv_path)
+        results.append(perform_statistical_analysis(df, track_type, mpso_type, function_name))
+    pd.DataFrame(results).to_csv(os.path.join(test_path, "Results.csv"))
+    with open(os.path.join(test_path, "settings.json"), "w+") as file:
+        json.dump({"replicates": replicates,"seed": seed}, file)
 
 def _build_extension_name(track_type: int, mpso_type: int, functionID: str):
     if track_type == QUALITY:
@@ -212,140 +220,3 @@ def _construct_MPSO(track_type: int, mpso_type: int, functionID):
     )
 
     return mpso_logger
-
-
-
-def run_benchmark_objective_function():
-    logging.info(f"Running {name} function")
-    print(f"Running {name} function for {extension_name}")
-
-    function = tf.TF.generate_function(id, optimum=optimum, bias=0)
-
-    pso = pso_file.PSO(
-        pso_hyperparameters = pso_hyperparameters,
-        domain_data = domain_data,
-        function = function,
-        pso_configs = pso_config
-    )
-
-    if use_pso_logger:
-        pso = pso_file.PSOLogger(
-            pso = pso,
-            config = pso_logger_config
-        )
-
-    mpso = mpso_file.MPSO(
-        pso = pso,
-        ccd_hyperparameters = ccd_hyperparameters,
-        mpso_config = mpso_config
-    )
-
-    mpso_logger = mpso_file.MPSOLogger(
-        mpso = mpso,
-        config = mpso_logger_config
-    )
-
-    rows.extend(record_run(mpso_logger, func_name=name, mpso_runs = 30))
-
-def run_benchmark_type(track_type: int, mpso_type: int, folder_path: str, dims: int, dtype):
-    """ Run a specific type of benchmark (e.g. mpso_ccd-quality, mpso_ccd-time etc.)"""
-    configs = construct_configs(dims, dtype)
-    pso_hyperparameters = configs[0]
-    domain_data = configs[1]
-    pso_config = configs[2]
-    pso_logger_config = configs[3]
-    ccd_hyperparameters = configs[4]
-    mpso_config = configs[5]
-    mpso_logger_config = configs[6]
-    # Adjust tracking configs for whether we are doing something for quality or time
-    if track_type == QUALITY:
-        # If we are tracking quality, it is fine to track as many values as possible
-        pso_logger_config.track_quality = True
-        use_pso_logger = True
-        track_name = "quality"# to be used for storing the results of benchmark tests
-    elif track_type == TIME:
-        # If we are tracking time, limit tracking to only MPSO iterations
-        use_pso_logger = False
-        track_name = "time" # to be used for storing the results of benchmark tests
-    else:
-        raise Exception(f"{track_type} Not a valid track type")
-
-    # Adjust tracking configs based on whether we are using MPSO or MPSOCCD
-    if mpso_type == MPSO:
-        mpso_config.use_ccd = False
-        mpso_logger_config.track_ccd = False
-        mpso_name = "mpso" # to be used for storing the results of benchmark tests
-    elif mpso_type == MPSOCCD:
-        mpso_config.use_ccd = True
-        mpso_logger_config.track_ccd = True
-        mpso_name = "mpso_ccd" # to be used for storing the results of benchmark tests
-    else:
-        raise Exception(f"{mpso_type} not a valid run type")
-    
-    extension_name = f"{mpso_name}-{track_name}"
-    logging.info(f"Running {extension_name} tests")
-
-    # Run through all test functions
-    for i in range(len(tf.TESTFUNCTIDS)):
-        name = tf.TESTFUNCTSTRINGS[i]
-        id = tf.TESTFUNCTIDS[i]
-
-        if name in IGNORELIST or id in IGNORELIST:
-            continue
-        run_benchmark_objective_function()
-    
-
-def run_benchmark_tests():
-    dims = 30
-    dtype = np.float64
-    optimum = np.zeros(dims, dtype=dtype)
-    current_datetime = datetime.now()
-    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H-%M-%S")
-    
-    # Folder 
-    folder_path = os.path.join(RESULTSFOLDER, f"Benchmark{formatted_datetime}")
-    os.mkdir(folder_path)
-
-    # Run through every type of tracker
-    for run_type in [(x, y) for x in track_types for y in mpso_types]:
-        track_type = run_type[0]
-        mpso_type = run_type[1]
-        run_benchmark_type(track_type = track_type, mpso_type = mpso_type, folder_path = folder_path)
-
-        # rows that will be included with the dataframe
-        rows = []
-
-        # folder name for the benchmarktest
-        dataclasses = [
-            (pso_hyperparameters, "pso_hyperparameters"),
-            (domain_data, "domain_data"),
-            (pso_config, "pso_config"),
-            (pso_logger_config, "pso_logger_config"),
-            (ccd_hyperparameters, "ccd_hyperparameters"),
-            (mpso_config, "mpso_config"),
-            (mpso_logger_config, "mpso_logger_config")
-        ]
-
-        logging.info("Writing results to file")
-        print("Writing results to file")
-
-        extension_name = f"{mpso_name}-{track_name}"
-        result_folder_path = os.path.join(folder_path, extension_name)
-        os.mkdir(result_folder_path)
-
-        with open(os.path.join(result_folder_path, "datadump.jsonl"), "w") as file:
-            for row in pd.DataFrame(rows).iterrows():
-                row[1].to_json(file)
-
-        for dataclass in dataclasses:
-            # Write the configs to a json file as well
-            file_name = dataclass[1]
-            data = dataclass[0]
-
-            with open(os.path.join(result_folder_path, f"{file_name}.json"), "w") as file:
-                codec.dataclass_to_json_file(data, file)
-
-    print("Finished running test functions")
-
-#run_benchmark_tests()
-    
