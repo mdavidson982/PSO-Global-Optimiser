@@ -4,7 +4,6 @@ import testfuncts.testfuncts as tf
 import numpy as np
 import pandas as pd
 import os
-import logging
 import itertools
 import json
 
@@ -31,20 +30,6 @@ IGNORELIST = [tf.SHIFTEDELLIPTICSTRING,
               tf.SHIFTEDROTATEDACKLEYSTRING,
               tf.ROTATEDRASTRIGINSTRING,
 ]
-
-def record_run(runner: mpso_file.MPSOLogger, func_name: str, mpso_runs: int = 30):
-    rows = []
-    for i in range(mpso_runs):
-        runner.run_mpso()
-        df = runner.return_results()
-        
-        row = {
-            "df": df,
-            "run_number": i+1,
-            "function_name": func_name,
-        }
-        rows.append(row)
-    return rows
 
 def _make_benchmark_folder():
     """Makes a run for the overall benchmark folder"""
@@ -82,18 +67,24 @@ def output_configs(logger: mpso_file.MPSOLogger, extension_path: str):
             codec.dataclass_to_json_file(config[0], file)
 
 
-def record_mpso_iteration(logger: mpso_file.MPSOLogger, extension_path: str, iteration: int):
-    mpso_results = logger.rows[-1]
-    if "PSOData" in list(mpso_results.keys()):
+def record_mpso_run(logger: mpso_file.MPSOLogger, extension_path: str, iteration: int):
+    if "PSOData" in list(logger.rows[-1].keys()):
+        rows = []
         replicate_path = _make_replicate_folder(extension_path, iteration)
         pso_path = os.path.join(replicate_path, "PSOData.csv")
-        pd.DataFrame(mpso_results["PSOData"]).to_csv(pso_path)
-        del logger.rows[-1]["PSOData"]
 
-def perform_statistical_analysis(df: pd.DataFrame, track_type, mpso_type, function_name):
+        for i, row in enumerate(logger.rows):
+            pso_rows = row["PSOData"]
+            for j in range(len(pso_rows)):
+                pso_rows[j]["MPSOIteration"] = i+1
+            rows.extend(pso_rows)
+            del logger.rows[i]["PSOData"]
+        pd.DataFrame(rows).to_csv(pso_path)
+
+def perform_statistical_analysis(df: pd.DataFrame, track_name, mpso_name, function_name):
     new_df_data = {
-        "track_type": track_type,
-        "mpso_type": mpso_type,
+        "track_type": track_name,
+        "mpso_type": mpso_name,
         "function_name": function_name
     }
 
@@ -116,38 +107,63 @@ def run_benchmark_tests(replicates: int = 30, seed: int = int(time.time())):
     test_path = _make_benchmark_folder()
 
     results = []
+    total_test_size = len(track_types) * len(mpso_types) * (len(tf.TESTFUNCTSTRINGS) - len(IGNORELIST))
+    test_number = 1
     for track_type, mpso_type, function_name in itertools.product(track_types, mpso_types, tf.TESTFUNCTSTRINGS):
         if function_name in IGNORELIST:
             continue
         extension_name = _build_extension_name(track_type, mpso_type, function_name)
+        track_name, mpso_name = _get_test_names(track_type, mpso_type)
+
         extension_path = _make_benchmark_test_folder(test_path, extension_name)
         mpso_logger = _construct_MPSO(track_type=track_type, mpso_type=mpso_type, functionID = function_name)
 
+        print(f"Running {extension_name} (test {test_number} / {total_test_size})")
+
+        mpso_rows = []
         for i in range(replicates):
+            start = time.time()
+            print(f"\tReplicate {i+1}/{replicates} ... ", end="")
             mpso_logger.run_mpso(random_state = None)
-            record_mpso_iteration(mpso_logger, extension_path, i)
-            if "PSOData" in list(mpso_logger.rows[:-1].keys()):
-                del mpso_logger.rows[:-1]["PSOData"]
+            record_mpso_run(mpso_logger, extension_path, i)
+            end_result = mpso_logger.rows[-1]
+            end_result["replicate_number"] = i+1
+            
+            mpso_rows.append(end_result)
+            print(f"Done, took {time.time()-start} seconds.")
 
         output_configs(mpso_logger, extension_path)
         output_csv_path = os.path.join(extension_path, "MPSORuns.csv")
-        df = pd.DataFrame(mpso_logger.rows)
+
+        df = pd.DataFrame(mpso_rows)
         df.to_csv(output_csv_path)
-        results.append(perform_statistical_analysis(df, track_type, mpso_type, function_name))
+
+        results.append(perform_statistical_analysis(df, track_name, mpso_name, function_name))
+        test_number += 1
     pd.DataFrame(results).to_csv(os.path.join(test_path, "Results.csv"))
     with open(os.path.join(test_path, "settings.json"), "w+") as file:
         json.dump({"replicates": replicates,"seed": seed}, file)
 
-def _build_extension_name(track_type: int, mpso_type: int, functionID: str):
+def _return_track_type_name(track_type: int):
     if track_type == QUALITY:
         track_name = "quality"
     elif track_type == TIME:
         track_name = "time"
-    
+    return track_name
+
+def _return_mpso_type_name(mpso_type: int):
     if mpso_type == MPSO:
         mpso_name = "mpso"
     elif mpso_type == MPSOCCD:
         mpso_name = "mpsoccd"
+    return mpso_name
+
+def _get_test_names(track_type, mpso_type):
+    return _return_track_type_name(track_type), _return_mpso_type_name(mpso_type)
+
+def _build_extension_name(track_type: int, mpso_type: int, functionID: str):
+    track_name = _return_track_type_name(track_type)
+    mpso_name = _return_mpso_type_name(mpso_type)
     extension_name = f"{mpso_name}-{track_name}-{functionID}"
     return extension_name
 

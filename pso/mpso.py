@@ -171,8 +171,9 @@ class MPSOLogger:
     def run_mpso(self, random_state: int | None = None) -> None:
         self.mpso.set_seed(random_state)
         self.mpso.initialize()
+        self.start_time = time_ns()
+        self.clear_rows()
         while self.mpso.iterations < self.mpso.mpso_config.iterations:
-            self.start_time = time_ns()
             self.run_iteration()
 
 class MPSOInterface:
