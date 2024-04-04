@@ -13,6 +13,19 @@ dataclasses = {
     dc.PSOLoggerConfig: "pso_logger_config",
 }
 
+def edit_specific_function(func_name: str, type: type, new: dict):
+    if type not in list(dc.DATACLASSES.values()):
+        raise Exception("Not a valid type to change")
+    file_path = os.path.join(CONFIG_FOLDER, func_name, dataclasses[type] + ".json")
+    with open(file_path, "r") as file:
+        dclass = pso.codec.json_file_to_dataclass(file)
+        for key in new:
+            if not hasattr(dclass, key):
+                raise Exception(f"{key} not a valid field")
+            setattr(dclass, key, new[key])
+    with open(file_path, "w+") as file:
+        pso.codec.dataclass_to_json_file(dclass, file)
+
 def edit_configs_all_functions(type: type, new: dict):
     """
     Edit the configs of a specific datatype for all classes.
@@ -24,11 +37,4 @@ def edit_configs_all_functions(type: type, new: dict):
         raise Exception("Not a valid type to change")
     folders = os.listdir(CONFIG_FOLDER)
     for folder in folders:
-        file_path = os.path.join(CONFIG_FOLDER, folder, dataclasses[type]+".json")
-        with open(file_path, "r") as file:
-            dclass = pso.codec.json_file_to_dataclass(file)
-            for key in new:
-                setattr(dclass, key, new[key])
-        with open(file_path, "w+") as file:
-            pso.codec.dataclass_to_json_file(dclass, file)
-
+        edit_specific_function(folder, type, new)

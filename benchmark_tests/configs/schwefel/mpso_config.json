@@ -1,1 +1,1 @@
-{"datatype": "MPSOConfigs", "data": {"use_ccd": true, "iterations": 30}}
+{"datatype": "MPSOConfigs", "data": {"use_ccd": true, "iterations": 15, "seed": 1712262416}}

@@ -77,7 +77,25 @@ def record_mpso_run(logger: mpso_file.MPSOLogger, extension_path: str, iteration
             pso_rows = row["PSOData"]
             for j in range(len(pso_rows)):
                 pso_rows[j]["MPSOIteration"] = i+1
+                pso_rows[j]["is_ccd"] = False
             rows.extend(pso_rows)
+
+            if logger.config.track_ccd:
+                ccd_row = {
+                    "MPSOIteration": i+1,
+                    "is_ccd":  True,
+                }
+                if logger.config.track_time:
+                    ccd_row.update({
+                        "time": row["time_ccd"]
+                    })
+
+                if logger.config.track_quality:
+                    ccd_row.update({
+                        "g_best_value": row["g_best_value_ccd"],
+                        "g_best_coords": row["g_best_coords_ccd"]
+                    })
+
             del logger.rows[i]["PSOData"]
         pd.DataFrame(rows).to_csv(pso_path)
 
@@ -97,7 +115,7 @@ def perform_statistical_analysis(df: pd.DataFrame, track_name, mpso_name, functi
             new_df_data[f"average_{label}"] = df[label].mean()
             new_df_data[f"max_{label}"] = df[label].max()
             new_df_data[f"min_{label}"] = df[label].min()
-            new_df_data[f"std-dev{label}"] = df[label].std()
+            new_df_data[f"std-dev_{label}"] = df[label].std()
 
     return new_df_data
 
@@ -109,13 +127,16 @@ def run_benchmark_tests(replicates: int = 30, seed: int = int(time.time())):
     results = []
     total_test_size = len(track_types) * len(mpso_types) * (len(tf.TESTFUNCTSTRINGS) - len(IGNORELIST))
     test_number = 1
+
+    all_tests_path = os.path.join(test_path, "tests")
+    os.mkdir(all_tests_path)
     for track_type, mpso_type, function_name in itertools.product(track_types, mpso_types, tf.TESTFUNCTSTRINGS):
         if function_name in IGNORELIST:
             continue
         extension_name = _build_extension_name(track_type, mpso_type, function_name)
         track_name, mpso_name = _get_test_names(track_type, mpso_type)
 
-        extension_path = _make_benchmark_test_folder(test_path, extension_name)
+        extension_path = _make_benchmark_test_folder(all_tests_path, extension_name)
         mpso_logger = _construct_MPSO(track_type=track_type, mpso_type=mpso_type, functionID = function_name)
 
         print(f"Running {extension_name} (test {test_number} / {total_test_size})")
@@ -128,6 +149,7 @@ def run_benchmark_tests(replicates: int = 30, seed: int = int(time.time())):
             record_mpso_run(mpso_logger, extension_path, i)
             end_result = mpso_logger.rows[-1]
             end_result["replicate_number"] = i+1
+            del end_result
             
             mpso_rows.append(end_result)
             print(f"Done, took {time.time()-start} seconds.")
