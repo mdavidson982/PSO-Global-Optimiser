@@ -14,6 +14,7 @@ dataclasses = {
 }
 
 def edit_specific_function(func_name: str, type: type, new: dict):
+    """ Edit a specific function's config in behcmark_tests/configs."""
     if type not in list(dc.DATACLASSES.values()):
         raise Exception("Not a valid type to change")
     file_path = os.path.join(CONFIG_FOLDER, func_name, dataclasses[type] + ".json")
