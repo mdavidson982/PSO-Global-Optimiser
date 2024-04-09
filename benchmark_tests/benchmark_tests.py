@@ -34,7 +34,7 @@ IGNORELIST = [tf.SHIFTEDELLIPTICSTRING,
 
 def _make_benchmark_folder():
     """Makes a run for the overall benchmark folder"""
-    formatted_datetime = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    formatted_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     folder_path = os.path.join(RESULTSFOLDER, f"Benchmark{formatted_datetime}")
     os.mkdir(folder_path)
     return folder_path
