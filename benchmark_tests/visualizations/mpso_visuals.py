@@ -61,15 +61,15 @@ def make_mpso_only_visualization(
             make_time_figure_only_mpso(df, title = f"MPSO (After CCD)-Only-Time", path = figures_path, before_ccd = True)
     plt.close("all")
     
-def make_quality_figure_only_mpso (df: pd.DataFrame, title: str, path: str, before_ccd: bool = False):
-    fig, ax = _make_figure_only_mpso(df, "g_best_value", before_ccd = before_ccd)
+def make_quality_figure_only_mpso (df: pd.DataFrame, title: str, path: str, use_mpso: bool, use_ccd: bool):
+    fig, ax = _make_figure_only_mpso(df, "g_best_value", use_mpso, use_ccd)
     ax.set_ylabel("Quality")
     ax.set_title(title)
 
     plt.savefig(os.path.join(path, title), dpi=600)
     plt.close(fig)
 
-def make_time_figure_only_mpso (df: pd.DataFrame, title: str, path: str, before_ccd: bool = False):
+def make_time_figure_only_mpso (df: pd.DataFrame, title: str, path: str, use_mpso: bool, use_ccd: bool):
     fig, ax = _make_figure_only_mpso(df, "time", before_ccd = before_ccd)
     ax.set_ylabel("Time")
     ax.set_title(title)
@@ -77,7 +77,7 @@ def make_time_figure_only_mpso (df: pd.DataFrame, title: str, path: str, before_
     plt.savefig(os.path.join(path, title), dpi=600)
     plt.close(fig)
 
-def _make_figure_only_mpso(df: pd.DataFrame, ylabel, before_ccd: bool):
+def _make_figure_only_mpso(df: pd.DataFrame, ylabel, use_mpso, use_ccd: bool):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 

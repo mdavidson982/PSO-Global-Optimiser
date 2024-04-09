@@ -4,4 +4,3 @@ test3.py
 visualizationtest.py
 temp/
 /benchmark_tests/benchmarkruns/*
-!/benchmark_tests/benchmarkruns/
