@@ -51,6 +51,7 @@ def _make_replicate_folder(benchmark_test_path: str, replicate: int):
     os.mkdir(replicate_path)
     return replicate_path
 
+
 def output_configs(logger: mpso_file.MPSOLogger, extension_path: str):
     """Output all of the configs that a given MPSO used to a folder"""
     configs = [
@@ -79,7 +80,7 @@ def record_mpso_run(logger: mpso_file.MPSOLogger, extension_path: str, iteration
         for i, row in enumerate(logger.rows):
             pso_rows = row["PSOData"]
             for j in range(len(pso_rows)):
-                pso_rows[j]["MPSOIteration"] = i+1
+                pso_rows[j]["mpso_iteration"] = i+1
                 pso_rows[j]["is_ccd"] = False
                 pso_rows[j]["pso_iteration"]
             rows.extend(pso_rows)
@@ -87,7 +88,7 @@ def record_mpso_run(logger: mpso_file.MPSOLogger, extension_path: str, iteration
             if logger.config.track_ccd:
                 # If tracking CCD, append a special row to show its results.
                 ccd_row = {
-                    "MPSOIteration": i+1,
+                    "mpso_iteration": i+1,
                     "is_ccd":  True,
                     "pso_iteration": len(pso_rows)
                 }

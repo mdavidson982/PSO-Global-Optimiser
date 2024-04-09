@@ -7,4 +7,4 @@ functions = [x for x in tf.TESTFUNCTSTRINGS if x not in t.IGNORELIST]
 #functions = ["sphere", "rosenbrock"]
 
 #t.run_benchmark_tests(replicates = 30, track_types=t.TRACK_TYPES, function_names= functions, mpso_types=t.MPSO_TYPES)
-t.run_benchmark_tests(replicates = 2, track_types = t.TRACK_TYPES, function_names = ["sphere"], mpso_types = [t.MPSOCCD])
+t.run_benchmark_tests(replicates = 2, track_types = t.TRACK_TYPES, function_names = ["sphere", "rosenbrock"], mpso_types = t.MPSO_TYPES)

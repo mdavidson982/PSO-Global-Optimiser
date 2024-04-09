@@ -21,11 +21,11 @@ def make_pso_visualization(
     figures_path = os.path.join(path, "PSOfigures")
     if "PSOfigures" not in dir_files:
         os.mkdir(figures_path)
-
+    
     df: pd.DataFrame = pd.read_csv(os.path.join(path, "PSOData.csv"), index_col=0)
 
     # We want to separate the mpso iterations out.
-    mpso_iterations = df["MPSOIteration"].unique()
+    mpso_iterations = df["mpso_iteration"].unique()
 
     # Determine if there are any CCD rows in the dataframe
     if len(df[df["is_ccd"]==True]) > 0:
@@ -37,7 +37,7 @@ def make_pso_visualization(
     for i, mpso_iteration in enumerate(mpso_iterations):
         printer(f"Making visualization {i + 1} / {mpso_iterations.shape[0]}...", end = "")
         # Grab only data that matches the specific MPSO iteration
-        iteration_data = df[df["MPSOIteration"] == mpso_iteration]
+        iteration_data = df[df["mpso_iteration"] == mpso_iteration]
 
         # If there are CCD values, rearrange the data so that only pso information and pso including CCD are stored separately.
         if has_ccd:
@@ -54,6 +54,7 @@ def make_pso_visualization(
             if has_ccd and make_ccd:
                 make_time_figure_pso(iteration_data, f"PSO-CCD-TimeVsIteration-{mpso_iteration}", figures_path, show_ccd = True)
         printer("Done!")
+        plt.close("all")
 
 def make_quality_figure_pso(df: pd.DataFrame, title: str, path: str, show_ccd: bool):
     """Makes a figure of pso_iteration vs quality"""
@@ -62,6 +63,7 @@ def make_quality_figure_pso(df: pd.DataFrame, title: str, path: str, show_ccd: b
 
     fig, ax = _make_figure_pso(x, y, show_ccd)
     ax.set_ylabel("Quality")
+    ax.set_title(title)
     plt.savefig(os.path.join(path, title), dpi=600)
     plt.close(fig)
     
@@ -72,6 +74,7 @@ def make_time_figure_pso(df: pd.DataFrame, title: str, path: str, show_ccd: bool
 
     fig, ax = _make_figure_pso(x, y, show_ccd)
     ax.set_ylabel("Time")
+    ax.set_title(title)
     plt.savefig(os.path.join(path, title), dpi=600)
     plt.close(fig)
 
