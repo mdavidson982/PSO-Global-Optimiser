@@ -36,7 +36,7 @@ def _make_benchmark_folder():
     """Makes a run for the overall benchmark folder"""
     formatted_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     folder_path = os.path.join(RESULTSFOLDER, f"Benchmark{formatted_datetime}")
-    os.mkdir(folder_path)
+    os.makedirs(folder_path)
     return folder_path
 
 def _make_benchmark_test_folder(benchmark_path: str, extension: str):
