@@ -9,7 +9,7 @@ import csv
 search_file = os.path.join("c:\\", "Users", "80sbl", "Documents", "AA Shit to look back at", "SeinorSeminarProject", "PSO-Global-Optimiser-1", "benchmark_tests", "benchmarkruns", "Benchmark2024-04-09_14-53-12", "Results.csv")
 print(os.getcwd())
 print(search_file)
-tv.create_visual_table(search_file)
+tv.display_table(search_file)
 
 #z = "/home/jcm/Documents/PSO/PSO-Global-Optimiser/benchmark_tests/benchmarkruns/Benchmark2024-04-08 14-20-35/tests/mpsoccd-quality-sphere/MPSORuns/MPSO-Iteration-0"
 #v.make_pso_visualization(path = z,verbose = True)
