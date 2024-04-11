@@ -5,7 +5,7 @@ import pso.codec
 
 dataclasses = {
     dc.CCDHyperparameters: "ccd_hyperparameters",
-    dc.FunctionData: "domain_data",
+    dc.FunctionData: "function_data",
     dc.MPSOConfigs: "mpso_config",
     dc.MPSOLoggerConfig: "mpso_logger_config",
     dc.PSOConfig: "pso_config",

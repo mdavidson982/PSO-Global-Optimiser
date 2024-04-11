@@ -11,14 +11,18 @@ def make_iteration_visuals(
 ):
     printer = _make_printer(verbose)
     dir_files = os.listdir(path)
+    print(path)
+    input()
 
     if "PSOData.csv" not in dir_files and "MPSOData.csv" not in dir_files:
         raise Exception("No visuals to generate!")
 
     vmpso.make_all_mpso_visualizations_for_iteration(path, make_time, make_quality, verbose - 1)
     
+    print(str("PSOData.csv" in dir_files) + " Yup")
     if "PSOData.csv" in dir_files:
-        vpso.make_pso_visualization(path, make_time, make_quality, make_ccd = True, verbose = verbose - 2)
+        print("here")
+        #vpso.make_pso_visualization(path, make_time, make_quality, make_ccd = True, verbose = verbose - 2)
     
 def make_all_iterations_visuals(
     path: str,
