@@ -12,19 +12,38 @@ def _reformat_df_only(df: pd.DataFrame):
     # If there are any ccd values, reformat these to be intermittent steps between mpso
     if any([ccd_col in df.columns for ccd_col in ccd_cols]):
         new_rows = []
-        for row in df:
-            row = df.loc[row]
-            new_row_regular = {col: row[col] for col in df.columns}
+        for _, row in df.iterrows():
+            new_row_regular = {col: row[col] for col in list(df.columns)}
             new_row = {"mpso_iteration": row["mpso_iteration"] + 0.5, "is_ccd": True}
             for ccd_col in ccd_cols:
                 if ccd_col in df.columns:
                     new_row[ccd_col[:-len("_ccd")]] = row[ccd_col]
-            new_rows.extend([new_row, new_row_regular])
-            df = pd.DataFrame(df)
+            new_rows.extend([new_row_regular, new_row])
+            df = pd.DataFrame(new_rows)
     return df
 
-      
-def make_mpso_only_visualization(
+def make_all_mpso_visualizations_for_iteration(
+        path: str,
+        make_time: bool = True,
+        make_quality: bool = True,
+        verbose: int = 0
+): 
+    printer = _make_printer(verbose)
+    dir_files = os.listdir(path)
+    if "MPSOData.csv" in dir_files:
+        printer("Making mpso_only visualizations", end = "...")
+        make_mpso_only_visualizations(
+            path = path, make_time = make_time, make_quality = make_quality
+        )
+        printer("Done!")
+    if "PSOData.csv" in dir_files:
+        printer("Making mpso_full visualizations", end = "...")
+        make_full_mpso_visualizations(
+            path = path, make_time = make_time, make_quality = make_quality
+        )
+        printer("Done!")
+
+def make_mpso_only_visualizations(
     path: str,
     make_time: bool = True,
     make_quality: bool = True,
@@ -45,20 +64,21 @@ def make_mpso_only_visualization(
 
     ccd_values = df[df["is_ccd"] == True]
     if ccd_values.shape[0] > 0:
-        has_ccd = True
+        use_ccd = True
         ccd_title = " (Before and After CCD)"
     else:
-        has_ccd = False
+        use_ccd = False
         ccd_title = ""
     
+    printer("Making graphs only for mpso")
     if make_quality and "g_best_value" in df.columns:
-        make_quality_figure_only_mpso(df, title = f"MPSO{ccd_title}-Only-Quality", path = figures_path, before_ccd = True)
-        if has_ccd:
-            make_quality_figure_only_mpso(df, title = f"MPSO (After CCD)-Only-Quality", path = figures_path, before_ccd = False)
+        make_quality_figure_only_mpso(df, title = f"MPSO{ccd_title}-Only-Quality", path = figures_path, use_mpso = True, use_ccd = use_ccd)
+        if use_ccd:
+            make_quality_figure_only_mpso(df, title = f"MPSO (After CCD)-Only-Quality", path = figures_path, use_mpso = False, use_ccd = use_ccd)
     if make_time and "time" in df.columns:
-        make_time_figure_only_mpso(df, title = f"MPSO{ccd_title}-Only-Time", path = figures_path, before_ccd = True)
-        if has_ccd:
-            make_time_figure_only_mpso(df, title = f"MPSO (After CCD)-Only-Time", path = figures_path, before_ccd = True)
+        make_time_figure_only_mpso(df, title = f"MPSO{ccd_title}-Only-Time", path = figures_path, use_mpso = True, use_ccd = use_ccd)
+        if use_ccd:
+            make_time_figure_only_mpso(df, title = f"MPSO (After CCD)-Only-Time", path = figures_path, use_mpso = False, use_ccd = use_ccd)
     plt.close("all")
     
 def make_quality_figure_only_mpso (df: pd.DataFrame, title: str, path: str, use_mpso: bool, use_ccd: bool):
@@ -70,7 +90,7 @@ def make_quality_figure_only_mpso (df: pd.DataFrame, title: str, path: str, use_
     plt.close(fig)
 
 def make_time_figure_only_mpso (df: pd.DataFrame, title: str, path: str, use_mpso: bool, use_ccd: bool):
-    fig, ax = _make_figure_only_mpso(df, "time", before_ccd = before_ccd)
+    fig, ax = _make_figure_only_mpso(df, "time", use_mpso, use_ccd)
     ax.set_ylabel("Time")
     ax.set_title(title)
 
@@ -81,27 +101,22 @@ def _make_figure_only_mpso(df: pd.DataFrame, ylabel, use_mpso, use_ccd: bool):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    if before_ccd:
-        ax.plot(np.array(df["mpso_iteration"]), np.array(df[ylabel]), linestyle = "-", color="g", label="MPSO iterations")
-        ccd_vals = 
-
-        ax.scatter(np.array(df["mpso_i"]))
-
-    ax.plot(np.array(df["mpso_iteration"]), np.array(df[ylabel]), linestyle = "-", color="g", label="MPSO iterations")
-
-    if before_ccd
-
-    if plot_ccd and show_ccd:
-        ax.scatter(np.array(ccd_values.index), np.array(ccd_values[ylabel]), marker = "x", color = "red", label = "CCD Points")
+    include_values = []
+    if use_mpso:
+        include_values.append(False)
+    if use_ccd:
+        include_values.append(True)
     
-    uniques = df["mpso_iteration"].unique()
-    #ax.scatter(np.array(mpso_labels.index), np.array(mpso_labels[ylabel]), marker = "o", color = "orange", label = "New MPSO Iteration")
+    df_values = df[df["is_ccd"].isin(include_values)]
+
+    ax.plot(np.array(df_values["mpso_iteration"]), np.array(df_values[ylabel]), linestyle = "-", color="g", label="MPSO iterations")
+    if use_ccd:
+        ccd_values = df[df["is_ccd"] == True]
+        ax.scatter(np.array(ccd_values["mpso_iteration"]), np.array(ccd_values[ylabel]), marker = "x", color = "red", label = "CCD iterations")
 
     ax.legend()
-    ax.set_xlabel("Iteration")
+    ax.set_xlabel("MPSO Iteration")
     return fig, ax
-
-    
 
 def _reformat_df_full(df: pd.DataFrame):
     if "time" in df.columns:
@@ -191,5 +206,5 @@ def _make_figure_full_mpso(df: pd.DataFrame, ylabel, show_ccd: bool = True, show
     #ax.scatter(np.array(mpso_labels.index), np.array(mpso_labels[ylabel]), marker = "o", color = "orange", label = "New MPSO Iteration")
 
     ax.legend()
-    ax.set_xlabel("Iteration")
+    ax.set_xlabel("PSO Iteration")
     return fig, ax

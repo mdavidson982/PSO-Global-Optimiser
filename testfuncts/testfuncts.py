@@ -131,8 +131,9 @@ class TestFuncts:
         x = np.linspace(x_bound[0], x_bound[1], 500)
         y = np.linspace(y_bound[0], y_bound[1], 500)
         X, Y = np.meshgrid(x, y)
-        input = np.array((X, Y))
-        return X, Y, function(input)
+        z = np.array((X, Y))
+        Z = np.apply_along_axis(function, axis = 0, arr = z)
+        return X, Y, Z
 
     #F1: Shifted Sphere Function
     def _sphere_gen(optimum: p.ADTYPE, bias: p.DTYPE):
@@ -234,8 +235,9 @@ class TestFuncts:
     def _rastrigin_gen(optimum:p.ADTYPE, bias: p.DTYPE):
         def rastrigin(x: p.ADTYPE) -> p.DTYPE:
             # Calculate the Rastrigin function value for a given input x
+            z = x + np.expand_dims(x, list(range(1, len(optimum.shape)+1)))
             z = x - optimum
-            return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0)
+            return np.sum(z**2 - 10*(np.cos(2*np.pi*z) + 10), axis=0) + bias
         return rastrigin
 
     #F10: Shifted Rotated Rastrigin’s Function

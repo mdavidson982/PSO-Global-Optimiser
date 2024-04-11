@@ -127,7 +127,7 @@ class MPSOLogger:
         pertinent values.
         """
 
-        current_row = {}
+        current_row = {"mpso_iteration": self.mpso.iterations}
         # Run an iteration of the underlying mpso object
         self.mpso.run_PSO()
 
@@ -140,7 +140,6 @@ class MPSOLogger:
         # Track quality of solution
         if self.config.track_quality:
             current_row.update({
-                "mpso_iteration": self.mpso.iterations,
                 "g_best_coords": np_to_json(self.mpso.get_g_best_coords()),
                 "g_best_value": self.mpso.get_g_best_value(),
             })

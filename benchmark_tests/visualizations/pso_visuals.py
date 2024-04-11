@@ -4,12 +4,15 @@ import numpy as np
 import os
 from .utils import _make_printer
 
+
+
+
 def make_pso_visualization(
     path: str, 
     make_time: bool = True, 
     make_quality: bool = True, 
     make_ccd: bool = True,
-    verbose: bool = False
+    verbose: int = 0
 ):
     """Makes a visualizations for an individual pso runs."""
     printer = _make_printer(verbose)
