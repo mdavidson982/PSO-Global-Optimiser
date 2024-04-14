@@ -127,9 +127,10 @@ class TestFuncts:
         return func(optimum=optimum, bias=bias)
     
     def generate_contour(function, lb: p.ADTYPE, ub: p.ADTYPE) -> (p.ADTYPE, p.ADTYPE, p.ADTYPE):
-        x_bound, y_bound = u.dimension_to_xy_bounds(lb, ub)
-        x = np.linspace(x_bound[0], x_bound[1], 500)
-        y = np.linspace(y_bound[0], y_bound[1], 500)
+        print(lb)
+        print(ub)
+        x = np.linspace(lb[0], ub[1], 500)
+        y = np.linspace(lb[0], ub[1], 500)
         X, Y = np.meshgrid(x, y)
         z = np.array((X, Y))
         Z = np.apply_along_axis(function, axis = 0, arr = z)

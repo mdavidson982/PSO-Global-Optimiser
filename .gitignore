@@ -1,6 +1,7 @@
 test.py
 test2.py
 test3.py
+makecontours.py
 visualizationtest.py
 temp/
 /benchmark_tests/benchmarkruns/*
