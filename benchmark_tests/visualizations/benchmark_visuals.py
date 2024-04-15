@@ -25,15 +25,17 @@ def make_benchmark_visuals(path: str, verbose: int = 0):
     true_bias = fndata.bias
     true_optimum = fndata.optimum
 
+    skip_quality = False
     if "g_best_value_ccd" in df.columns:
         quality_title = title + " Quality with CCD"
         x = df["g_best_value_ccd"]
-        
-        make_visuals(x, )
+
     elif "g_best_value" in df.columns:
         quality_title = title + " Quality"
         x = df["g_best_value"]
-        make_visuals()
+    else:
+        skip_quality = True
+    make_visuals(x, title = quality_title)
     
     if "time_ccd" in df.columns:
         time_title = title + " Time with CCD"

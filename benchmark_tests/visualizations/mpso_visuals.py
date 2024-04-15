@@ -109,13 +109,17 @@ def _make_figure_only_mpso(df: pd.DataFrame, ylabel, use_mpso, use_ccd: bool):
     
     df_values = df[df["is_ccd"].isin(include_values)]
 
-    ax.plot(np.array(df_values["mpso_iteration"]), np.array(df_values[ylabel]), linestyle = "-", color="g", label="MPSO iterations")
+    ax.plot(np.array(df_values["mpso_iteration"]), np.array(df_values[ylabel]), linestyle = "-", color="g")
     if use_ccd:
         ccd_values = df[df["is_ccd"] == True]
-        ax.scatter(np.array(ccd_values["mpso_iteration"]), np.array(ccd_values[ylabel]), marker = "x", color = "red", label = "CCD iterations")
+        ax.scatter(np.array(ccd_values["mpso_iteration"]), np.array(ccd_values[ylabel]), marker = "x", color = "red", label = "End of CCD")
+
+    if use_mpso:
+        mpso_values = df[df["is_ccd"] == False]
+        ax.scatter(np.array(mpso_values["mpso_iteration"]), np.array(mpso_values[ylabel]), marker = "o", color = "blue", label = "End of MPSO Cycle")
 
     ax.legend()
-    ax.set_xlabel("MPSO Iteration")
+    ax.set_xlabel("MPSO Cycles")
     return fig, ax
 
 def _reformat_df_full(df: pd.DataFrame):

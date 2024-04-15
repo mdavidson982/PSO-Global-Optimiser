@@ -4,9 +4,6 @@ import numpy as np
 import os
 from .utils import _make_printer
 
-
-
-
 def make_pso_visualization(
     path: str, 
     make_time: bool = True, 
