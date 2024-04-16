@@ -15,13 +15,13 @@ def make_benchmark_visuals(path: str, verbose: int = 0):
         raise Exception(f"{path} does not contain MPSORuns.csv")
     
     _, title = os.path.split(path)
-    df = pd.read_csv("MPSORuns.csv")
+    df = pd.read_csv(os.path.join(path, "MPSORuns.csv"))
     try:
         with open(dataclasses[FunctionData]+".json") as file:
-            fndata = FunctionData(json_file_to_dataclass(file))
+            fndata: FunctionData = json_file_to_dataclass(file)
     except Exception:
-        with open(dataclasses["domain_data.json"]) as file:
-            fndata = FunctionData(json_file_to_dataclass(file))
+        with open(os.path.join(path, "domain_data.json")) as file:
+            fndata: FunctionData = json_file_to_dataclass(file)
     true_bias = fndata.bias
     true_optimum = fndata.optimum
 
@@ -34,28 +34,51 @@ def make_benchmark_visuals(path: str, verbose: int = 0):
         quality_title = title + " Quality"
         x = df["g_best_value"]
     else:
+        printer("Skipping visuals graphs")
         skip_quality = True
-    make_visuals(x, title = quality_title)
+    if not skip_quality:
+        make_visuals(x, title = quality_title, savepath = path)
     
+    skip_time = False
     if "time_ccd" in df.columns:
         time_title = title + " Time with CCD"
         x = df["time_ccd"]
-        make_visuals()
     elif "time" in df.columns:
-        x = df
-        make_visuals()
+        time_title = title + " Time"
+        x = df["time"]
+    else:
+        printer("Skipping time graphs")
+        skip_time = True
+    if not skip_time:
+        make_visuals(x, title = time_title, savepath = path)
 
+def make_visuals(series: pd.Series, title: str, savepath: str):
+    make_histogram(series, title, savepath)
+    make_boxplot(series, title, savepath)
 
-def make_visuals(series: pd.Series, qual_title: str, time_title: str):
-    make_histogram()
-
-def make_histogram(x: pd.Series, title):
+def make_histogram(x: pd.Series, title: str, savepath: str):
+    
     fig = plt.figure()
-    plt.hist(x, bins = len(x), color = "blue")
-    
+    ax = fig.add_subplot(111)
+    ax.hist(x, color = "cyan", edgecolor = "black")
+    ax.set_title(title)
+    ax.set_xlabel(x.name)
+    ax.set_ylabel("Number of replicates")
+    save = os.path.join(savepath, title + "-histogram.png")
+    fig.savefig(save, dpi = 600)
+    plt.close("all")
     
 
-    pass
+def make_boxplot(x: pd.Series, title: str, savepath: str):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    box = ax.boxplot(x, patch_artist=True)
+    box["boxes"][0].set(color = "blue", linewidth = 1.2)
+    box["boxes"][0].set(facecolor = "cyan")
 
-def make_boxplot():
-    pass
+    ax.set_title(title)
+    ax.set_ylabel(x.name)
+    save = os.path.join(savepath, title + "-boxplot.png")
+    
+    fig.savefig(save, dpi = 600)
+    plt.close("all")
