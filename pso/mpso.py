@@ -126,11 +126,11 @@ class MPSOLogger:
         """Runs an iteration of the underlying mpso object, and records any
         pertinent values.
         """
-
-        current_row = {"mpso_iteration": self.mpso.iterations}
         # Run an iteration of the underlying mpso object
         self.mpso.run_PSO()
+        self.mpso.iterations += 1
 
+        current_row = {"mpso_iteration": self.mpso.iterations}
         # Track time it took to get to the solution
         if self.config.track_time:
             current_row.update({
@@ -165,15 +165,46 @@ class MPSOLogger:
                 "PSOData": self.mpso.pso.return_results()
             })
         self.rows.append(current_row)
-        self.mpso.iterations += 1
+
 
     def run_mpso(self, random_state: int | None = None) -> None:
         self.mpso.set_seed(random_state)
         self.mpso.initialize()
         self.start_time = time_ns()
         self.clear_rows()
+
         while self.mpso.iterations < self.mpso.mpso_config.iterations:
             self.run_iteration()
+
+        # Do extra data acquisition to get the initial starting condition of the algorithm
+        first_row = {"mpso_iteration": 0}
+        if self.config.track_time:
+            first_row.update({
+                "time": 0
+            })
+            if self.config.track_ccd:
+                first_row.update({
+                    "time_ccd": 0
+                })
+
+        
+        if self._check_PSOLogger():
+            data = self.rows[0]["PSOData"][0]
+
+
+            if self.config.track_quality:
+                first_row.update({
+                    "g_best_coords": data["g_best_coords"],
+                    "g_best_value": data["g_best_value"]
+                })
+                if self.config.track_ccd:
+                    first_row.update({
+                        "g_best_coords_ccd": data["g_best_coords"],
+                        "g_best_value_ccd": data["g_best_value"]
+                    })
+        self.rows.insert(0, first_row)
+
+                
 
 class MPSOInterface:
 

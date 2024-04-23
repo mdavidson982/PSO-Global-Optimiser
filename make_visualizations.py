@@ -8,6 +8,10 @@ import os
 import csv
 import time
 
+def make_iteration_visuals():
+    path = "/home/jcm/Documents/PSO/PSO-Global-Optimiser/benchmark_tests/benchmarkruns/Benchmark2024-04-18_13-46-05/tests/mpsoccd-quality-sphere/MPSORuns/MPSO-Iteration-0"
+    iv.make_iteration_visuals(path)
+
 def bmark_visuals():
     z = "/home/jcm/Documents/PSO/PSO-Global-Optimiser/benchmark_tests/benchmarkruns/Benchmark2024-04-07 11-04-52/tests"
     for index, i in enumerate(os.listdir(z)):
@@ -18,13 +22,10 @@ def bmark_visuals():
         time.sleep(5)
 
 def mpso_vs_mpsoccd():
-    path = "/home/jcm/Documents/PSO/PSO-Global-Optimiser/benchmark_tests/benchmarkruns/Benchmark2024-04-07 11-04-52"
-    function = "rastrigin"
+    path = "/home/jcm/Documents/PSO/PSO-Global-Optimiser/benchmark_tests/benchmarkruns/Benchmark2024-04-21_13-35-54"
+    function = "shiftedschwefel"
     cv.make_mpso_vs_mpsoccd_graph(path, function)
 
 
 if __name__ == "__main__":
-
     mpso_vs_mpsoccd()
-
-    pass

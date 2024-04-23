@@ -14,11 +14,14 @@ def _reformat_df_only(df: pd.DataFrame):
         new_rows = []
         for _, row in df.iterrows():
             new_row_regular = {col: row[col] for col in list(df.columns)}
-            new_row = {"mpso_iteration": row["mpso_iteration"] + 0.5, "is_ccd": True}
-            for ccd_col in ccd_cols:
-                if ccd_col in df.columns:
-                    new_row[ccd_col[:-len("_ccd")]] = row[ccd_col]
-            new_rows.extend([new_row_regular, new_row])
+            new_rows.append(new_row_regular)
+            if row["mpso_iteration"] > 0:
+                new_row = {"mpso_iteration": row["mpso_iteration"] + 0.5, "is_ccd": True}
+
+                for ccd_col in ccd_cols:
+                    if ccd_col in df.columns:
+                        new_row[ccd_col[:-len("_ccd")]] = row[ccd_col]
+                new_rows.append(new_row)
             df = pd.DataFrame(new_rows)
     return df
 
@@ -182,9 +185,9 @@ def _make_figure_full_mpso(df: pd.DataFrame, ylabel, show_ccd: bool = True, show
         plot_ccd = True
     else:
         plot_ccd = False
-    ax.plot(np.array(df.index), np.array(df[ylabel]), linestyle = "-", color="g", label="MPSO showing PSO intermediate values")
+    ax.plot(np.array(df["mpso_iteration"]), np.array(df[ylabel]), linestyle = "-", color="g", label="MPSO showing PSO intermediate values")
     if plot_ccd and show_ccd:
-        ax.scatter(np.array(ccd_values.index), np.array(ccd_values[ylabel]), marker = "x", color = "red", label = "CCD Points")
+        ax.scatter(np.array(ccd_values["mpso_iteration"]), np.array(ccd_values[ylabel]), marker = "x", color = "red", label = "CCD Points")
     
     uniques = df["mpso_iteration"].unique()
     

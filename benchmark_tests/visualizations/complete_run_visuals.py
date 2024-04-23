@@ -53,6 +53,5 @@ def make_mpso_vs_mpsoccd_graph(path, fnname):
     plt.xlabel("MPSO/MPSOCCD Cycles")
     plt.ylabel("Quality")
     plt.legend()
-    plt.show()
     fig.savefig(os.path.join(save_path, title))
     plt.close(fig)

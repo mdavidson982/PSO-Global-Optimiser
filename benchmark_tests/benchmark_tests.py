@@ -78,6 +78,8 @@ def record_mpso_run(logger: mpso_file.MPSOLogger, extension_path: str, iteration
     if "PSOData" in list(logger.rows[-1].keys()): # If PSO data was not tracked, it will not appear in the result data
         rows = []
         for i, row in enumerate(logger.rows):
+            if "PSOData" not in row.keys():
+                continue
             pso_rows = row["PSOData"]
             for j in range(len(pso_rows)):
                 pso_rows[j]["mpso_iteration"] = i+1
