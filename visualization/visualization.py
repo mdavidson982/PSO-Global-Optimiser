@@ -2,11 +2,10 @@ import tkinter as tk
 import numpy as np
 import utils.parameters as p
 import utils.util as u
-import os
+import visualization.util as vu
 import pso.pso as pSO
 import testfuncts.testfuncts as tf
 import utils.consts as c
-import pso.codec as codec
 from matplotlib.figure import Figure
 from matplotlib.colors import LogNorm
 from matplotlib.transforms import Bbox
@@ -87,14 +86,23 @@ class Visualization:
     #Misc data
     update_time: int
     contour_img_path: str
+
+    cmap: str
     
-    def __init__(self, root: tk.Tk, pso: pSO.PSO, update_time: int = 1000):
-        u.clear_temp() #Clear temporary png files
+    def __init__(self, root: tk.Tk, pso: pSO.PSO, update_time: int = 1000, cmap: str = None):
+        vu.clear_temp() #Clear temporary png files
+
+        if cmap == None:
+            self.cmap = "inferno"
+        else:
+            self.cmap = cmap
+
         self.update_time = update_time - update_time % FRAME_MS # Ensures that an iteration of PSO can evenly be divided into frames
         self.root = root
+
         self.root.bind('<Escape>', self.close_window)
         self.pso = pso  
-        self.contour_img_path = u.make_tempfile_path() # Path to the contour image that will be saved later.
+        self.contour_img_path = vu.make_tempfile_path() # Path to the contour image that will be saved later.
 
         self.root.title("Visualization")
         # Make the visualization full screen
@@ -122,6 +130,8 @@ class Visualization:
         
         self.root.update_idletasks()
         self.root.update()
+
+        
 
     def close_window(self, event):
         self.root.destroy()
@@ -256,6 +266,7 @@ class Visualization:
         self.part_canv.grid(row=0, column=0)
 
         self.root.update_idletasks()
+        x_bounds, y_bounds = u.dimension_to_xy_bounds(self.pso.domain_data.lower_bound, self.pso.domain_data.upper_bound)
         
         x, y, z = tf.TF.generate_contour(self.pso.function, self.pso.domain_data.lower_bound, self.pso.domain_data.upper_bound)
         fig = Figure(figsize=(self.part_canv.winfo_width()/DPI, self.part_canv.winfo_height()/DPI), dpi=DPI) #Make a figure object
@@ -266,12 +277,21 @@ class Visualization:
         ax.set_position(CONTOUR_DIM)
         self.contour_loc = ax.get_position() # Store this for mapping purposes later
 
-        # Apply a logarithmic scale to the colors so that the minima takes more colors
-        levels = np.logspace(np.log10(np.min(z)),np.log10(np.max(z)),COLOR_LEVELS)
+        minz = np.min(z)
+        maxz = np.max(z)
 
-        # Make the contour
-        ax.contourf(x, y, z, cmap="viridis",  
-                    norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels) 
+        levels = np.geomspace(1, maxz-minz + 1, COLOR_LEVELS) + minz - 1
+
+        if np.min(z) > 0:
+            # Make the contour
+            ax.contourf(x, y, z, cmap=self.cmap,  
+                        extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
+                        norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels) 
+        else:
+            # Make the contour
+            ax.contourf(x, y, z, cmap=self.cmap,  
+                        extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
+                        levels=levels) 
         
         fig.savefig(self.contour_img_path) #Save file for use as a background
         self.contour_img = tk.PhotoImage(file=self.contour_img_path+".png")
