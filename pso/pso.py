@@ -240,7 +240,7 @@ class PSOLogger:
     def clear_rows(self):
         self.rows = []
 
-    def return_results(self) -> pd.DataFrame:
+    def return_results(self) -> list[dict]:
         """Return the results of the logger as a dataframe"""
         return self.rows
     
@@ -343,4 +343,3 @@ def test_run_pso():
 
     pso_logger.run_PSO()
     df = pso_logger.return_results()
-    print(df.head())

@@ -127,8 +127,6 @@ class TestFuncts:
         return func(optimum=optimum, bias=bias)
     
     def generate_contour(function, lb: p.ADTYPE, ub: p.ADTYPE) -> (p.ADTYPE, p.ADTYPE, p.ADTYPE):
-        print(lb)
-        print(ub)
         x = np.linspace(lb[0], ub[1], 500)
         y = np.linspace(lb[0], ub[1], 500)
         X, Y = np.meshgrid(x, y)

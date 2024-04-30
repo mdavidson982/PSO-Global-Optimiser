@@ -13,11 +13,14 @@ dataclasses = {
     dc.PSOLoggerConfig: "pso_logger_config",
 }
 
-def edit_specific_function(func_name: str, type: type, new: dict):
+def edit_specific_function(func_name: str, type: type, new: dict, file_path:str = None):
     """ Edit a specific function's config in behcmark_tests/configs."""
     if type not in list(dc.DATACLASSES.values()):
         raise Exception("Not a valid type to change")
-    file_path = os.path.join(CONFIG_FOLDER, func_name, dataclasses[type] + ".json")
+    
+    if file_path == None:
+        file_path = os.path.join(CONFIG_FOLDER, func_name, dataclasses[type] + ".json")
+
     with open(file_path, "r") as file:
         dclass = pso.codec.json_file_to_dataclass(file)
         for key in new:
@@ -27,7 +30,7 @@ def edit_specific_function(func_name: str, type: type, new: dict):
     with open(file_path, "w+") as file:
         pso.codec.dataclass_to_json_file(dclass, file)
 
-def edit_configs_all_functions(type: type, new: dict):
+def edit_configs_all_functions(type: type, new: dict, folder_path: str = None):
     """
     Edit the configs of a specific datatype for all classes.
 
@@ -36,6 +39,14 @@ def edit_configs_all_functions(type: type, new: dict):
     """
     if type not in list(dc.DATACLASSES.values()):
         raise Exception("Not a valid type to change")
-    folders = os.listdir(CONFIG_FOLDER)
+    
+    if folder_path == None:
+        folders = os.listdir(CONFIG_FOLDER)
+    else:
+        folders = os.listdir(folder_path)
     for folder in folders:
-        edit_specific_function(folder, type, new)
+        if folder_path == None:
+            path = None
+        else:
+            path = os.path.join(folder_path, folder, dataclasses[type] + ".json")
+        edit_specific_function(folder, type, new, path)

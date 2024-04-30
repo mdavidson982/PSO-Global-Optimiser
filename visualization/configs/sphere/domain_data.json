@@ -1,0 +1,18 @@
+{
+    "datatype": "FunctionData",
+    "data": {
+        "upper_bound": [
+            100.0,
+            100.0
+        ],
+        "lower_bound": [
+            -100.0,
+            -100.0
+        ],
+        "optimum": [
+            0,
+            0
+        ],
+        "bias": -450
+    }
+}

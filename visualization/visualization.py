@@ -2,9 +2,11 @@ import tkinter as tk
 import numpy as np
 import utils.parameters as p
 import utils.util as u
-import pso as pSO
+import os
+import pso.pso as pSO
 import testfuncts.testfuncts as tf
 import utils.consts as c
+import pso.codec as codec
 from matplotlib.figure import Figure
 from matplotlib.colors import LogNorm
 from matplotlib.transforms import Bbox
@@ -254,9 +256,8 @@ class Visualization:
         self.part_canv.grid(row=0, column=0)
 
         self.root.update_idletasks()
-        x_bounds, y_bounds = u.dimension_to_xy_bounds(self.pso.lower_bound, self.pso.upper_bound)
         
-        x, y, z = tf.TF.generate_contour(self.pso.function, self.pso.lower_bound, self.pso.upper_bound)
+        x, y, z = tf.TF.generate_contour(self.pso.function, self.pso.domain_data.lower_bound, self.pso.domain_data.upper_bound)
         fig = Figure(figsize=(self.part_canv.winfo_width()/DPI, self.part_canv.winfo_height()/DPI), dpi=DPI) #Make a figure object
 
         # Make the figure take up as much space as possible
@@ -270,7 +271,6 @@ class Visualization:
 
         # Make the contour
         ax.contourf(x, y, z, cmap="viridis",  
-                    extent=[x_bounds[0], x_bounds[1], y_bounds[0], y_bounds[1]],
                     norm=LogNorm(vmin=np.min(z), vmax=np.max(z)), levels=levels) 
         
         fig.savefig(self.contour_img_path) #Save file for use as a background
@@ -291,7 +291,7 @@ class Visualization:
         # Respectively so that all particles show up on the contour plot.
         new_lb = np.array((cwidth*self.contour_loc.xmin, cheight*self.contour_loc.ymin), dtype=p.DTYPE)
         new_ub = np.array((cwidth*self.contour_loc.xmax, cheight*self.contour_loc.ymax), dtype=p.DTYPE)
-        coords = u.project(self.pso.lower_bound, self.pso.upper_bound, new_lb, new_ub, array) #Coordinates on the tkinter canvas
+        coords = u.project(self.pso.domain_data.lower_bound, self.pso.domain_data.upper_bound, new_lb, new_ub, array) #Coordinates on the tkinter canvas
 
         # Tkinter uses an odd scheme where y increases down, instead of up for coordinates.  This swapping of the y
         # axis conforms to the coordinate system of tkinter.
@@ -301,18 +301,3 @@ class Visualization:
             coords[c.YDIM] = new_ub[c.YDIM] + new_lb[c.YDIM] - coords[c.YDIM]
         
         return coords
-
-
-def TestVisualizer():
-    root = tk.Tk()
-    pso = pSO.PSO(num_part = p.NUM_PART, num_dim=p.NUM_DIM, alpha = p.ALPHA, upper_bound=p.UPPER_BOUND, lower_bound=p.LOWER_BOUND,
-    max_iterations=p.MAX_ITERATIONS, w=p.W, c1=p.C1, c2=p.C2, tolerance=p.TOLERANCE, mv_iteration=p.NO_MOVEMENT_TERMINATION,
-    optimum=p.OPTIMUM, bias=p.BIAS, functionID = p.FUNCT)
-
-    vis = Visualization(root=root, pso=pso, update_time = 1000)
-    
-    vis.start()
-    root.mainloop()
-
-
-TestVisualizer()

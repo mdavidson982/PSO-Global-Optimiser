@@ -31,7 +31,9 @@ class MPSOTester(unittest.TestCase):
 
         domain_data = dc.FunctionData(
             upper_bound = np.ones(num_dim)*100,
-            lower_bound = np.ones(num_dim)*-100
+            lower_bound = np.ones(num_dim)*-100,
+            optimum = np.zeros(num_dim),
+            bias = 0
         )
 
         optimum = np.zeros(num_dim)

@@ -93,7 +93,9 @@ class PSOCodecTester(DataTester):
         lower_bound = np.ones(5)*-1
         expected_domaindata = dc.FunctionData(
             upper_bound=upper_bound,
-            lower_bound=lower_bound
+            lower_bound=lower_bound,
+            optimum = np.zeros(3),
+            bias = 0
         )
 
         # Check regular serialization works

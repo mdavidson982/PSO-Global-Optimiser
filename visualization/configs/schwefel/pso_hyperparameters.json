@@ -1,0 +1,1 @@
+{"datatype": "PSOHyperparameters", "data": {"num_part": 100, "num_dim": 2, "alpha": 0.7, "w": 0.7, "c1": 0.4, "c2": 0.4, "tolerance": 1e-06, "mv_iteration": 10, "max_iterations": 100}}

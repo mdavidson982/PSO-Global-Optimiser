@@ -31,7 +31,9 @@ class PSOTester(unittest.TestCase):
 
         domain_data = dc.FunctionData(
             upper_bound = np.ones(num_dim)*100,
-            lower_bound = np.ones(num_dim)*-100
+            lower_bound = np.ones(num_dim)*-100,
+            optimum = np.zeros(num_dim),
+            bias = 0
         )
 
         optimum = np.zeros(num_dim)
@@ -48,9 +50,7 @@ class PSOTester(unittest.TestCase):
     
     def construct_logger(self):
         pso = self.construct_pso()
-        logging_settings = dc.PSOLoggerConfig(
-            log_level = dc.LogLevels.NO_LOG
-        )
+        logging_settings = dc.PSOLoggerConfig()
 
         pso_logger = pso_file.PSOLogger(
             pso = pso,
@@ -74,4 +74,5 @@ class PSOTester(unittest.TestCase):
     def test_logger_run(self):
         logger = self.construct_logger()
         logger.run_PSO()
-        print(logger.return_results().tail())
+        self.assertIsNotNone(logger.rows)
+        self.assertGreater(len(logger.rows), 1)
