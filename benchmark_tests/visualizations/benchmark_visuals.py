@@ -1,8 +1,8 @@
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
-from pso.codec import json_file_to_dataclass
-from pso.psodataclass import FunctionData
+from mpso_ccd.codec import json_file_to_dataclass
+from mpso_ccd.psodataclass import FunctionData
 from .utils import _make_printer
 from benchmark_tests.utils import dataclasses
 

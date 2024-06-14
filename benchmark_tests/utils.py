@@ -1,7 +1,7 @@
-import pso.psodataclass as dc
+import mpso_ccd.psodataclass as dc
 from .benchmark_tests import CONFIG_FOLDER
 import os
-import pso.codec
+import mpso_ccd.codec
 
 dataclasses = {
     dc.CCDHyperparameters: "ccd_hyperparameters",
@@ -22,13 +22,13 @@ def edit_specific_function(func_name: str, type: type, new: dict, file_path:str 
         file_path = os.path.join(CONFIG_FOLDER, func_name, dataclasses[type] + ".json")
 
     with open(file_path, "r") as file:
-        dclass = pso.codec.json_file_to_dataclass(file)
+        dclass = mpso_ccd.codec.json_file_to_dataclass(file)
         for key in new:
             if not hasattr(dclass, key):
                 raise Exception(f"{key} not a valid field")
             setattr(dclass, key, new[key])
     with open(file_path, "w+") as file:
-        pso.codec.dataclass_to_json_file(dclass, file)
+        mpso_ccd.codec.dataclass_to_json_file(dclass, file)
 
 def edit_configs_all_functions(type: type, new: dict, folder_path: str = None):
     """

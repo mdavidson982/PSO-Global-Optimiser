@@ -1,9 +1,10 @@
 """Run via 
-python3 -m unittest psofuncts/test_psofuncts.py
+python3 -m unittest pso/psofuncts/test_psofuncts.py
 """
 
 import unittest
-from . import initializer, update, ccd
+
+from . import ccd, update, initializer
 import logging
 import numpy as np
 import testfuncts.testfuncts as tf

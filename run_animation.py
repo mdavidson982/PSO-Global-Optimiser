@@ -1,8 +1,8 @@
 import os
 import visualization.visualization as v
-import pso.codec as codec
-import pso.pso as pSO
-import pso.psodataclass as dc
+import mpso_ccd.codec as codec
+import mpso_ccd.pso as pSO
+import mpso_ccd.psodataclass as dc
 import tkinter as tk
 import testfuncts.testfuncts as tf
 import numpy as np

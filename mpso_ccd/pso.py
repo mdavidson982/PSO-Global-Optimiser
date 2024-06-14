@@ -1,5 +1,5 @@
-from psofuncts.initializer import initializer
-import psofuncts.update as up
+from mpso_ccd.psofuncts.initializer import initializer
+import mpso_ccd.psofuncts.update as up
 from . import psodataclass as dc
 import testfuncts.testfuncts as tf
 
@@ -303,43 +303,3 @@ class PSOInterface:
     def pso(self) -> PSO:
         pass
 
-def test_run_pso():
-    pso_hyperparameters = dc.PSOHyperparameters(
-        num_part = p.NUM_PART,
-        num_dim=p.NUM_DIM, 
-        alpha = p.ALPHA,
-        max_iterations=p.MAX_ITERATIONS, 
-        w=p.W, 
-        c1=p.C1, 
-        c2=p.C2, 
-        tolerance=p.TOLERANCE, 
-        mv_iteration=p.NO_MOVEMENT_TERMINATION
-    )
-
-    domain_data = dc.FunctionData(
-        upper_bound = p.UPPER_BOUND,
-        lower_bound = p.LOWER_BOUND
-    )
-
-    optimum = optimum=p.OPTIMUM
-    bias=p.BIAS
-    
-    function = tf.TF.generate_function(p.FUNCT, optimum=optimum, bias=bias)
-
-    pso = PSO(
-        pso_hyperparameters = pso_hyperparameters,
-        domain_data = domain_data,
-        function = function
-    )
-
-    logging_settings = dc.PSOLoggerConfig(
-        log_level = dc.LogLevels.NO_LOG
-    )
-
-    pso_logger = PSOLogger(
-        pso = pso,
-        config = logging_settings
-    )
-
-    pso_logger.run_PSO()
-    df = pso_logger.return_results()

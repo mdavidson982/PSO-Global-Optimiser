@@ -1,8 +1,6 @@
 import numpy as np
 import utils.parameters as p
-import utils.util as u
-import utils.consts as c
-from pso.psodataclass import FunctionData
+from mpso_ccd.psodataclass import FunctionData
 
 SPHEREID = 1
 SPHERESTRING = "sphere"
@@ -49,18 +47,6 @@ def opt_reshape(x: p.ADTYPE, optimum: p.ADTYPE):
     new_shape = optimum.shape + ((1,) * (n1-n2))
     return optimum.reshape(new_shape)
 
-#Function used in Griewank test, placeholder values, code was created with ChatGPT
-def _linearMatrix_gen(conditionNum):
-    # Generate a diagonal scaling matrix Bruh1
-    singular_values = np.linspace(1, conditionNum, p.NUM_DIM)
-    Bruh1 = np.diag(singular_values)
-    # Generate a random orthogonal matrix Bruh3 using QR decomposition
-    Bruh2 = np.random.randn(p.NUM_DIM, p.NUM_DIM)
-    Bruh3 = np.linalg.qr(Bruh2)
-    # Construct the rotation matrix Bruh4 = Bruh3^T * Bruh1 * Bruh2
-    Bruh4 = np.dot(np.dot(Bruh3.T, Bruh1), Bruh3)
-    return Bruh4
-
 def gram_schmidt(A):
     """
     Perform the Gram-Schmidt process on a matrix A.
@@ -105,7 +91,7 @@ class TestFuncts:
         if functionID == SPHEREID or functionID == SPHERESTRING:
             func = TF._sphere_gen
         elif functionID == SHIFTEDSCHWEFELID or functionID == SHIFTEDSCHWEFELSTRING:
-            func = TF._schwefel_gen
+            func = TF._shifted_schwefel_gen
         elif functionID == SHIFTEDELLIPTICID or functionID == SHIFTEDELLIPTICSTRING:
             func = TF._shifted_elliptic_gen
         elif functionID == SCHWEFELID or functionID == SCHWEFELSTRING:
@@ -178,8 +164,8 @@ class TestFuncts:
             new = np.tile(z, length).reshape((length, length))
             lower = np.tril(new)
             prod_1 = np.sum(np.sum(lower, axis=1)**2)
-            prod_2 = 1 + 0.4*np.abs(np.random.standard_normal(1))
-            return prod_1*prod_2
+            prod_2 = 1 + 0.4*abs(np.random.standard_normal())
+            return prod_1*prod_2 + bias
 
         return schwefel
     

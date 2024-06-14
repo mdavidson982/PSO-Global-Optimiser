@@ -1,5 +1,5 @@
 from . import pso as pso_file, psodataclass as dc
-from psofuncts import ccd
+from mpso_ccd.psofuncts import ccd
 import utils.parameters as p
 from utils.util import np_to_json
 import pandas as pd

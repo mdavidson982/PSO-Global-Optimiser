@@ -1,5 +1,5 @@
 import time
-from pso import pso as pso_file, mpso as mpso_file, psodataclass as dc, codec
+from mpso_ccd import pso as pso_file, mpso as mpso_file, psodataclass as dc, codec
 import testfuncts.testfuncts as tf
 import numpy as np
 import pandas as pd

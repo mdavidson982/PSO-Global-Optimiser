@@ -41,9 +41,11 @@ def dataclass_to_json(obj) -> str:
     return json.dumps(obj = obj, cls = _DataClassEncoder)
 
 def dataclass_to_json_file(obj, file: TextIOWrapper):
+    """Dump a dataclass to a json file"""
     json.dump(obj = obj, fp = file, cls = _DataClassEncoder)
 
 def json_to_dataclass(jsonstring: str):
+    """Convert a jsonized string to a dataclass"""
     dataclass_name = json.loads(jsonstring)[_DATATYPE]
     dataclass = dc.DATACLASSES[dataclass_name]
 
@@ -52,6 +54,7 @@ def json_to_dataclass(jsonstring: str):
     return dataclass(**json.loads(jsonstring, object_hook=hook_function)[_DATA])
 
 def json_file_to_dataclass(file: TextIOWrapper):
+    """Read in a json file and convert to its respective psodataclass."""
     # Fetch the dataclass type from the top level of the json file, and return its class type
     dataclass_name = json.load(file)[_DATATYPE]
     dataclass = dc.DATACLASSES[dataclass_name]

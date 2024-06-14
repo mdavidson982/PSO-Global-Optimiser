@@ -1,5 +1,5 @@
 import numpy as np
-import psofuncts.update as up
+import mpso_ccd.psofuncts.update as up
 import utils.parameters as p
 
 

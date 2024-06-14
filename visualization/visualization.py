@@ -3,7 +3,7 @@ import numpy as np
 import utils.parameters as p
 import utils.util as u
 import visualization.util as vu
-import pso.pso as pSO
+import mpso_ccd.pso as pSO
 import testfuncts.testfuncts as tf
 import utils.consts as c
 from matplotlib.figure import Figure
